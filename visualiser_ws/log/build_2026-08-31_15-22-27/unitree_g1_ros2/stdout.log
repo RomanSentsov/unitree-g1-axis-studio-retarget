@@ -1,0 +1,170 @@
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+-- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+-- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+-- Found FastRTPS: /opt/ros/humble/include  
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/build/unitree_g1_ros2
+-- Install configuration: ""
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/launch
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/launch/gazebo.launch.py
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/launch/display.launch.py
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/launch/rviz.rviz
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hip_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_ankle_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_thumb_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_thumb_intermediate.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_index_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_shoulder_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_constraint_L.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_wrist_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_shoulder_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_thumb_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_link_rev_1_0.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/pelvis_contour_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_middle_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_ring_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_thumb_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/head_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_thumb_2_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_index_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_support_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_wrist_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_elbow_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_middle_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/logo_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hip_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hip_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_index_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_palm_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_rubber_hand.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_index_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_ring_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_middle_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_middle_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_index_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_constraint_R_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_middle_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_constraint_R.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hip_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_roll_link_rev_1_0.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_shoulder_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_pinky_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_thumb_intermediate.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_shoulder_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_pinky_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_thumb_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_thumb_2_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_knee_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_index_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_knee_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_pinky_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_shoulder_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_constraint_L_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_shoulder_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_wrist_roll_rubber_hand.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_palm_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_wrist_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_middle_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_ankle_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_wrist_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/pelvis.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hip_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_ankle_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_thumb_proximal_base.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_ring_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_thumb_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_rubber_hand.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_wrist_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_thumb_proximal_base.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_thumb_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_index_distal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_wrist_roll_rubber_hand.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_thumb_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_middle_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_constraint_R_rod_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_elbow_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_thumb_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/waist_yaw_link_rev_1_0.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_hand_base_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_ankle_pitch_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_pinky_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_constraint_L_rod_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/torso_link_23dof_rev_1_0.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hand_middle_0_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/L_ring_proximal.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/right_hip_yaw_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_wrist_roll_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/left_hand_index_1_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/meshes/R_hand_base_link.STL
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_dual_arm.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_23dof_rev_1_0.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/both_hands.csv
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_lock_waist_rev_1_0.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_lock_waist_rev_1_0.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand_rev_1_0
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand_rev_1_0/g1_29dof_with_hand_rev_1_0.usd
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/dex3_1_r.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand_rev_1_0.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_23dof_rev_1_0.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/both_hands.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_dual_arm.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_lock_waist.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_with_hand_rev_1_0.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_rev_1_0.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_23dof.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_rev_1_0.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_23dof.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/dex3_1_l.urdf
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/urdf/g1_29dof_lock_waist.xml
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/ament_index/resource_index/package_run_dependencies/unitree_g1_ros2
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/ament_index/resource_index/parent_prefix_path/unitree_g1_ros2
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/environment/ament_prefix_path.sh
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/environment/ament_prefix_path.dsv
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/environment/path.sh
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/environment/path.dsv
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/local_setup.bash
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/local_setup.sh
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/local_setup.zsh
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/local_setup.dsv
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/package.dsv
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/ament_index/resource_index/packages/unitree_g1_ros2
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/cmake/unitree_g1_ros2Config.cmake
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/cmake/unitree_g1_ros2Config-version.cmake
+-- Installing: /home/linuxuser/unitree_noitom_teleop/visualiser_ws/install/unitree_g1_ros2/share/unitree_g1_ros2/package.xml
