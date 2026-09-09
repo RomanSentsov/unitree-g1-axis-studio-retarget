@@ -49,9 +49,9 @@ class G1_29_ArmIK:
                                             "right_knee_joint" ,
                                             "right_ankle_pitch_joint" ,
                                             "right_ankle_roll_joint" ,
-                                            "waist_yaw_joint" ,
-                                            "waist_roll_joint" ,
-                                            "waist_pitch_joint" ,
+                                            # "waist_yaw_joint" ,       # vertical axis
+                                            "waist_roll_joint" ,        # bend sideways
+                                            "waist_pitch_joint" ,     # bend down
                                             
                                             # "left_hand_thumb_0_joint" ,
                                             # "left_hand_thumb_1_joint" ,
@@ -204,7 +204,7 @@ class G1_29_ArmIK:
         self.opti.solver("ipopt", opts)
 
         self.init_data = np.zeros(self.reduced_robot.model.nq)
-        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]), 14)
+        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]))
         self.vis = None
 
         if self.Visualization:
