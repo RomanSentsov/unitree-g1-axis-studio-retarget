@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 class WeightedMovingFilter:
-    def __init__(self, weights, data_size = 14):
+    def __init__(self, weights, data_size = 15):
         self._window_size = len(weights)
         self._weights = np.array(weights)
         assert np.isclose(np.sum(self._weights), 1.0), "[WeightedMovingFilter] the sum of weights list must be 1.0!"
