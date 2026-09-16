@@ -49,7 +49,7 @@ class G1_29_ArmIK:
                                             "right_knee_joint" ,
                                             "right_ankle_pitch_joint" ,
                                             "right_ankle_roll_joint" ,
-                                            # "waist_yaw_joint" ,       # vertical axis
+                                            # "waist_yaw_joint" ,       # vertical axis # exclude to activate
                                             "waist_roll_joint" ,        # bend sideways
                                             "waist_pitch_joint" ,     # bend down
                                             
@@ -102,6 +102,7 @@ class G1_29_ArmIK:
                 reference_configuration=np.array([0.0] * self.robot.model.nq),
             )
 
+            # manually added frames to not to edit URDF
             self.reduced_robot.model.addFrame(
                 pin.Frame('L_ee',
                           self.reduced_robot.model.getJointId('left_wrist_yaw_joint'),
@@ -126,15 +127,22 @@ class G1_29_ArmIK:
         #     frame_id = self.reduced_robot.model.getFrameId(frame.name)
         #     logger_mp.debug(f"Frame ID: {frame_id}, Name: {frame.name}")
 
-        # Creating Casadi models and data for symbolic computing
+        # ---------------------- Creating Casadi models and data for symbolic computing
         self.cmodel = cpin.Model(self.reduced_robot.model)
         self.cdata = self.cmodel.createData()
 
         # TODO: add other frames
         # Creating symbolic variables
+
+        # q (to optimize)
         self.cq = casadi.SX.sym("q", self.reduced_robot.model.nq, 1) 
+        # SE3 poses of ee_s
         self.cTf_l = casadi.SX.sym("tf_l", 4, 4)
         self.cTf_r = casadi.SX.sym("tf_r", 4, 4)
+
+        self.cTf_elbow_l = casadi.SX.sym("tf_elbow_l", 4, 4)
+        self.cTf_elbow_r = casadi.SX.sym("tf_elbow_r", 4, 4)
+
         cpin.framesForwardKinematics(self.cmodel, self.cdata, self.cq)
 
         # TODO: add error funcs for elbows and other frames
@@ -142,6 +150,11 @@ class G1_29_ArmIK:
         self.L_hand_id = self.reduced_robot.model.getFrameId("L_ee")
         self.R_hand_id = self.reduced_robot.model.getFrameId("R_ee")
 
+        self.R_elbow_id = self.reduced_robot.model.getFrameId("right_elbow_joint")
+        self.L_elbow_id = self.reduced_robot.model.getFrameId("left_elbow_joint")
+
+        # --------------- Cost func definitions
+        # Hand pos
         self.translational_error = casadi.Function(
             "translational_error",
             [self.cq, self.cTf_l, self.cTf_r],
@@ -162,14 +175,30 @@ class G1_29_ArmIK:
                 )
             ],
         )
+        self.translational_error_elbow = casadi.Function(
+            "translational_error_elbow",
+            [self.cq, self.cTf_elbow_l, self.cTf_elbow_r],
+            [
+                casadi.vertcat(
+                    self.cdata.oMf[self.L_elbow_id].translation - self.cTf_elbow_l[:3,3],
+                    self.cdata.oMf[self.R_elbow_id].translation - self.cTf_elbow_r[:3,3]
+                )
+            ],
+        )
 
-        # TODO: continue analyzing code.
+        # TODO: insert trans error elbows in cost
+
         # Defining the optimization problem
         self.opti = casadi.Opti()
         self.var_q = self.opti.variable(self.reduced_robot.model.nq)
         self.var_q_last = self.opti.parameter(self.reduced_robot.model.nq)   # for smooth
         self.param_tf_l = self.opti.parameter(4, 4)
         self.param_tf_r = self.opti.parameter(4, 4)
+        # elbow
+        self.param_tf_elbow_l = self.opti.parameter(4, 4)
+        self.param_tf_elbow_r = self.opti.parameter(4, 4)
+        self.translational_cost_elbow = casadi.sumsqr(self.translational_error_elbow(self.var_q, self.param_tf_elbow_l, self.param_tf_elbow_r))
+
         self.translational_cost = casadi.sumsqr(self.translational_error(self.var_q, self.param_tf_l, self.param_tf_r))
         self.rotation_cost = casadi.sumsqr(self.rotational_error(self.var_q, self.param_tf_l, self.param_tf_r))
         self.regularization_cost = casadi.sumsqr(self.var_q)
@@ -181,7 +210,9 @@ class G1_29_ArmIK:
             self.var_q,
             self.reduced_robot.model.upperPositionLimit)
         )
-        self.opti.minimize(50 * self.translational_cost + self.rotation_cost + 0.02 * self.regularization_cost + 0.1 * self.smooth_cost)
+
+        # ADDED ELBOW TRANSITIONAL COST
+        self.opti.minimize(50 * self.translational_cost + 5 * self.translational_cost_elbow + self.rotation_cost + 0.1 * self.regularization_cost + 0.1 * self.smooth_cost)
 
         opts = {
             # CasADi-level options
@@ -192,7 +223,7 @@ class G1_29_ArmIK:
             # IPOPT solver options
             'ipopt.sb': 'yes',    # disable Ipopt's license message
             'ipopt.print_level': 0,
-            'ipopt.max_iter': 30, 
+            'ipopt.max_iter': 30,
             'ipopt.tol': 1e-4,
             'ipopt.acceptable_tol': 5e-4,
             'ipopt.acceptable_iter': 5,
@@ -216,7 +247,7 @@ class G1_29_ArmIK:
             self.vis.display(pin.neutral(self.reduced_robot.model))
 
             # Enable the display of end effector target frames with short axis lengths and greater width.
-            frame_viz_names = ['L_ee_target', 'R_ee_target']
+            frame_viz_names = ['L_ee_target', 'R_ee_target', "L_elbow_target", "R_elbow_target"]
             FRAME_AXIS_POSITIONS = (
                 np.array([[0, 0, 0], [1, 0, 0],
                           [0, 0, 0], [0, 1, 0],
@@ -268,7 +299,7 @@ class G1_29_ArmIK:
 
         return robot, reduced_robot
 
-    def scale_arms(self, human_left_pose, human_right_pose, human_arm_length=0.60, robot_arm_length=0.75):
+    def scale_arms(self, human_left_pose, human_right_pose, human_arm_length=0.5, robot_arm_length=0.60):
         scale_factor = robot_arm_length / human_arm_length
         robot_left_pose = human_left_pose.copy()
         robot_right_pose = human_right_pose.copy()
@@ -276,19 +307,26 @@ class G1_29_ArmIK:
         robot_right_pose[:3, 3] *= scale_factor
         return robot_left_pose, robot_right_pose
 
-    def solve_ik(self, left_wrist, right_wrist, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None):
+    def solve_ik(self, left_wrist, right_wrist, left_elbow, right_elbow, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None):
         if current_lr_arm_motor_q is not None:
             self.init_data = current_lr_arm_motor_q
         self.opti.set_initial(self.var_q, self.init_data)
 
-        # left_wrist, right_wrist = self.scale_arms(left_wrist, right_wrist)
+        left_wrist, right_wrist = self.scale_arms(left_wrist, right_wrist)
+        left_elbow, right_elbow = self.scale_arms(left_elbow, right_elbow)
         if self.Visualization:
             self.vis.viewer['L_ee_target'].set_transform(left_wrist)   # for visualization
             self.vis.viewer['R_ee_target'].set_transform(right_wrist)  # for visualization
 
+            self.vis.viewer['L_elbow_target'].set_transform(left_elbow)   # for visualization
+            self.vis.viewer['R_elbow_target'].set_transform(right_elbow)  # for visualization
+
         self.opti.set_value(self.param_tf_l, left_wrist)
         self.opti.set_value(self.param_tf_r, right_wrist)
         self.opti.set_value(self.var_q_last, self.init_data) # for smooth
+
+        self.opti.set_value(self.param_tf_elbow_l, left_elbow)
+        self.opti.set_value(self.param_tf_elbow_r, right_elbow)
 
         try:
             sol = self.opti.solve()
