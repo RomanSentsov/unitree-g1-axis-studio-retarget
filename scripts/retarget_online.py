@@ -104,11 +104,11 @@ def get_global_transform(joints_dict, joint_name, parent_map=None,
     # ---- Локальная позиция ----
     local_pos = np.array(joint.get_local_position(), dtype=float)
 
-    # quat_rot = np.array(joint.get_local_rotation(), dtype=float)
     euler_rot = joint.get_local_rotation_by_euler()
+    # quat_rot = np.array(joint.get_local_rotation(), dtype=float)
 
     # ---- Локальная матрица 4×4 ----
-    rot = R.from_euler('yxz', euler_rot, degrees=True)
+    rot = R.from_euler('xyz', euler_rot, degrees=True)
     # rot = R.from_quat(quat_rot)
 
     local_mat = np.eye(4)
@@ -233,7 +233,7 @@ class MocapAxisDemo:
         self.app = MCPApplication()
         settings = MCPSettings()
         settings.set_udp(udp_port)
-        settings.set_bvh_rotation(MCPBvhRotation.YXZ)
+        settings.set_bvh_rotation(MCPBvhRotation.XYZ)
         settings.set_bvh_data
         self.app.set_settings(settings)
         self.app.open()
