@@ -12,7 +12,7 @@ from scipy.spatial.transform import Rotation as R
 # ------------------------------ BVH OPEN ------------------------------
 
 FILEPATH = "recs/bvh_recs/bvh_misha_no_xyz_chr01_MAYA.bvh"
-# FILEPATH = "recs/bvh_recs/robot_67_cry_joy_wings_photo_pose.bvh"
+# FILEPATH = "recs/bvh_recs/Aleksandr_recs/rec1_chr01_MAYA.bvh"
 FILEPATH_EX = "recs/bvh_recs/example1.bvh"
 
 bvh = pybvh.read_bvh_file(FILEPATH)
@@ -68,7 +68,7 @@ quat_list = [R.align_vectors(np.stack([l_hand_x[i], l_hand_y[i]], axis=0),
 l_quat = np.array(quat_list)
 # ------------------------------ Play BVH via retarget  ------------------------------
 
-arm_ik = G1_29_ArmIK(Unit_Test = True, Visualization = True)
+arm_ik = G1_29_ArmIK(Unit_Test = False, Visualization = True)
 
     # initial positon
 R_prev_target = pin.SE3(
@@ -117,6 +117,6 @@ while True:
         elapsed = now - until
         print(now - until)
 
-        time.sleep(np.max([0.033 - elapsed, 0.001]))
+        time.sleep(np.max([0.033 - elapsed, 0.00001]))
 
     

@@ -7,15 +7,6 @@ from mocap_api import *
 
 
 
-
-
-
-
-
-
-
-
-
 PARENT_MAP = {
     # Корень
     "Hips": None,
@@ -89,14 +80,8 @@ PARENT_MAP = {
     "LeftHandPinky3": "LeftHandPinky2",
 }
 
-
-
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-
-
 def get_global_transform(joints_dict, joint_name, parent_map=None,
-                         relative_to_hips=True, _cache=None):
+                         relative_to_hips=True, _cache=None, ignore_rot=True):
     """
     Возвращает глобальную позицию и кватернион сустава.
 
@@ -119,15 +104,13 @@ def get_global_transform(joints_dict, joint_name, parent_map=None,
     # ---- Локальная позиция ----
     local_pos = np.array(joint.get_local_position(), dtype=float)
 
-    # ---- Локальный кватернион ----
-    try:
-        local_quat = np.array(joint.get_local_rotation(), dtype=float)  # (x,y,z,w)
-    except AttributeError:
-        rx, ry, rz = joint.get_local_rotation_by_euler()
-        local_quat = R.from_euler('xyz', [rx, ry, rz]).as_quat()
+    # quat_rot = np.array(joint.get_local_rotation(), dtype=float)
+    euler_rot = joint.get_local_rotation_by_euler()
 
     # ---- Локальная матрица 4×4 ----
-    rot = R.from_quat(local_quat)
+    rot = R.from_euler('yxz', euler_rot, degrees=True)
+    # rot = R.from_quat(quat_rot)
+
     local_mat = np.eye(4)
     local_mat[:3, :3] = rot.as_matrix()
     local_mat[:3, 3] = local_pos
@@ -135,14 +118,26 @@ def get_global_transform(joints_dict, joint_name, parent_map=None,
     parent_name = parent_map.get(joint_name)
 
     if parent_name is None:
-        # Корень (Hips)
+        # Root
         if relative_to_hips:
-            # Игнорируем собственные смещение и поворот Hips
-            global_mat = np.array([[0, -1, 0, 0],
-                                   [1, 0, 0, 0],
-                                   [0, 0, 1, 0],
+            # reorient
+            # local_mat[:3, 3] = np.zeros(3)
+
+            global_mat = np.array([[1, 0, 0, 0], # 90 degs arond x axis
+                                   [0, 0, -1, 0],
+                                   [0, 1, 0, 0],
                                    [0, 0, 0, 1]])
+
+
+            global_mat = np.array([[0, -1, 0, 0], # 90 degs arond z axis
+                                    [1, 0, 0, 0],
+                                    [0, 0, 1, 0],
+                                    [0, 0, 0, 1]]) @ global_mat
+
+            # global_mat = local_mat @ global_mat # orient of Hips
+            
         else:
+            # not working currently
             global_mat = local_mat
     else:
         parent_pos, parent_quat = get_global_transform(
@@ -162,18 +157,7 @@ def get_global_transform(joints_dict, joint_name, parent_map=None,
     _cache[cache_key] = result
     return result
 
-
-
-
-
-
-
-
-
-
-
-
-
+# Axis Studio stuff
 
 def get_event_type_name(event_type_value):
     """
@@ -210,7 +194,7 @@ class MocapAxisDemo:
         self.running = False
         self.prev_posture_time_ms = None
 
-        # Retarget
+        # Retarget init
 
         self.arm_ik = G1_29_ArmIK(Unit_Test = True, Visualization = True)
 
@@ -249,7 +233,8 @@ class MocapAxisDemo:
         self.app = MCPApplication()
         settings = MCPSettings()
         settings.set_udp(udp_port)
-        settings.set_bvh_rotation(MCPBvhRotation.XYZ)
+        settings.set_bvh_rotation(MCPBvhRotation.YXZ)
+        settings.set_bvh_data
         self.app.set_settings(settings)
         self.app.open()
         print(f"Mocap application initialized, UDP port: {udp_port}")
@@ -274,29 +259,27 @@ class MocapAxisDemo:
         Handle avatar data
         """
         avatar = MCPAvatar(evt.event_data.avatar_handle)
+
+
         joints = avatar.get_joints()  # Get all joint data
 
-        # TIME because 90 fps is too much for retargeter
+        # TIME because 90 fps is too much for retargeter with visualization
 
-
-        # hour, minute, second, millisecond = avatar.get_avatar_posture_time()
+        # hour, minute, second, millisecond = avatar.get_avatar_posture_time()      # error if stream BVH edit
         # current_time_ms = ((hour * 3600 + minute * 60 + second) * 1000 + millisecond)
+
+
         current_time_ms = time.time() * 1000
         
         if self.prev_posture_time_ms is not None:
             delta_ms = current_time_ms - self.prev_posture_time_ms
-            # print(f"=====Frame interval: {delta_ms} ms")
             if delta_ms < 33.0:
                 return
         self.prev_posture_time_ms = current_time_ms
 
-
-
-
-
+        # for the Forward kinematic
 
         joints_dict = {j.get_name(): j for j in joints}
-
         _cache = {}
 
         for joint in joints:
@@ -330,13 +313,7 @@ class MocapAxisDemo:
                 self.l_elbow_pos, _ = get_global_transform(
                     joints_dict, self.l_elbow_name, relative_to_hips=True, _cache=_cache)
 
-
-
-
-
-
-        
-        print(self.r_hand_pos)
+        # print(self.r_hand_pos)
 
         r_hand_x = self.r_mid_pos - self.r_hand_pos
         r_hand_y = self.r_pinky_pos - self.r_mid_pos
@@ -344,34 +321,35 @@ class MocapAxisDemo:
         l_hand_x = self.l_mid_pos - self.l_hand_pos
         l_hand_y = self.l_pinky_pos - self.l_mid_pos
 
+        # Orientation of hands
+
         r_quat = R.align_vectors(np.stack([r_hand_x, r_hand_y], axis=0),
-                                np.array([[1, 0, 0], [0, -1, 0]]))[0].as_quat()
+                                np.array([[1, 0, 0], [0, 0, -1]]))[0].as_quat()
 
         l_quat = R.align_vectors(np.stack([l_hand_x, l_hand_y], axis=0),
-                                np.array([[1, 0, 0], [0, 1, 0]]))[0].as_quat()
-
+                                np.array([[1, 0, 0], [0, 0, -1]]))[0].as_quat()
 
         # Making SE3 
 
         R_tf_target = pin.SE3(
             pin.Quaternion(r_quat),
-            self.r_hand_pos/200,
+            self.r_hand_pos/150,
         )   
 
         L_tf_target = pin.SE3(
             pin.Quaternion(l_quat),
-            self.l_hand_pos/200,
+            self.l_hand_pos/150,
         )
 
 
         R_tf_elbow_target = pin.SE3(
             pin.Quaternion(1, 0, 0, 0),
-            self.r_elbow_pos/200,
+            self.r_elbow_pos/150,
         )   
 
         L_tf_elbow_target = pin.SE3(
             pin.Quaternion(1, 0, 0, 0),
-            self.l_elbow_pos/200,
+            self.l_elbow_pos/150,
         )
 
 
@@ -379,17 +357,8 @@ class MocapAxisDemo:
         self.arm_ik.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous)
         now = time.time()
         elapsed = now - until
-        # print(now - until)
+        print(now - until)
         
-            # print(f"avatar data : joint: {joint.} : {link_name}, position: {position}, rotation: {rotation}")
-
-            # grounding_state = joint.get_grounding_state()  # Get joint grounding state
-            # if grounding_state == 0:
-            #     print(f"avatar data : joint: {link_name}, grounding_state: {grounding_state}")
-            #     groundable_points = joint.get_groundable_points()  # Get joint groundable points
-            #     print(f"avatar data : joint: {link_name}, groundable_points: {groundable_points}")
-
-
 
     def stop(self):
         """
@@ -405,3 +374,4 @@ if __name__ == "__main__":
     demo = MocapAxisDemo()
     print("Starting Mocap Axis Studio demo...") 
     demo.start()
+
