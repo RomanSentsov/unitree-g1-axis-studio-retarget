@@ -9,9 +9,12 @@ import os
 import sys
 import pickle
 import logging_mp
+from scipy.spatial.transform import Rotation as R
 logger_mp = logging_mp.getLogger(__name__)
 parent2_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(parent2_dir)
+
+# TODO: add terms to restict elbows from approaching body
 
 from utils.weighted_moving_filter import WeightedMovingFilter
 
@@ -372,6 +375,50 @@ class G1_29_ArmIK:
 
             # return sol_q, sol_tauff
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
+
+    def solve_ik_bvh_frame(self, bvh_frame):
+        '''
+        Same as solve_ik, but takes whole bvh frame as input and parses it
+
+        ## Args:
+            bvh_frame: dict {node_name, np.array([x ,y, z])}
+        '''
+
+        r_hand_x = bvh_frame["RightHandMiddle1"] - bvh_frame["RightHand"]
+        r_hand_y = bvh_frame["RightHandPinky1"] - bvh_frame["RightHandMiddle1"]
+
+        l_hand_x = bvh_frame["LeftHandMiddle1"] - bvh_frame["LeftHand"]
+        l_hand_y = bvh_frame["LeftHandPinky1"] - bvh_frame["LeftHandMiddle1"]
+
+        r_quat = R.align_vectors(np.array([r_hand_x, r_hand_y]), 
+                                    np.array([[1, 0, 0], [0, 0, -1]]))[0].as_quat()
+
+        l_quat = R.align_vectors(np.array([l_hand_x, l_hand_y]), 
+                                    np.array([[1, 0, 0], [0, 0, -1]]))[0].as_quat()
+        
+        R_tf_target = pin.SE3(
+            pin.Quaternion(r_quat),
+            bvh_frame["RightHand"]/150,
+        )   
+
+        L_tf_target = pin.SE3(
+            pin.Quaternion(l_quat),
+            bvh_frame["LeftHand"]/150,
+        )
+
+
+        R_tf_elbow_target = pin.SE3(
+            pin.Quaternion(1, 0, 0, 0),
+            bvh_frame["RightForeArm"]/150,
+        )   
+
+        L_tf_elbow_target = pin.SE3(
+            pin.Quaternion(1, 0, 0, 0),
+            bvh_frame["LeftForeArm"]/150,
+        )
+
+        return (self.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous))
+
 
 
 if __name__ == "__main__":
