@@ -5,11 +5,13 @@ import time
 from pathlib import Path
 import pybvh
 import numpy as np
+import tyro
 import logging
 logging.getLogger("yourdfpy").setLevel(logging.ERROR)
 
 from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
 from hands_retargeting.viser_wrapper import ViserHandsVisualizer
+from utils.axis_studio_receiver import AxisStudioReceiver
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -40,19 +42,11 @@ LEFT_HAND_NODES = [
     "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "EndSiteLeftHandPinky3",
 ]
 
-def main():
-    # load bvh
-    print(f">>> Loading BVH: {BVH_FILEPATH}")
-    bvh = pybvh.read_bvh_file(str(BVH_FILEPATH))
-    bvh = bvh.reorient_world_up("+z")
-    bvh = bvh.rotate_vertical(np.pi / 2)
-
-    poses = bvh.node_positions(centered="skeleton")
-    node_names = list(bvh.node_index.keys())
-    total_frames = poses.shape[0]
-    dt = getattr(bvh, "frame_time", 1.0 / 240.0)
-    fps = int(round(1.0 / dt)) if dt > 0 else 60
-
+def main(
+    live: bool = False,
+    udp_port: int = 7012,
+    bvh_path: Path = BVH_FILEPATH,
+):    
     # init retargeters
     print(">>> Initialising retargeters...")
     retargeter_right = HandRetargeterWrapper(
@@ -73,33 +67,65 @@ def main():
         dof_names_left=retargeter_left.dof_joint_names,
         dof_names_right=retargeter_right.dof_joint_names,
     )
+    
+    all_hand_nodes = RIGHT_HAND_NODES + LEFT_HAND_NODES
+    
+    if live:
+        print(f">>> Starting live (Axis Studio UDP: {udp_port})...")
+        with AxisStudioReceiver(joint_names=all_hand_nodes, udp_port=udp_port) as receiver:
+            try:
+                while True:
+                    frame_dict = receiver.get_frame()
+                    if frame_dict is None:
+                        time.sleep(0.001)
+                        continue
 
-    print(f">>> Viser started. Frames: {total_frames} | FPS: {fps}")
+                    q_r = retargeter_right.retarget(frame_dict)
+                    q_l = retargeter_left.retarget(frame_dict)
 
-    frame_idx = 0
-    try:
-        while True:
-            t_start = time.time()
+                    visualizer.update(q_l, q_r)
 
-            frame_dict = {
-                name: poses[frame_idx, bvh.node_index[name], :]
-                for name in node_names
-            }
+            except KeyboardInterrupt:
+                print("\n>>> Stopped by user.")
+    else:
+        # load bvh
+        print(f">>> Loading BVH: {BVH_FILEPATH}")
+        bvh = pybvh.read_bvh_file(str(BVH_FILEPATH))
+        bvh = bvh.reorient_world_up("+z")
+        bvh = bvh.rotate_vertical(np.pi / 2)
 
-            q_r = retargeter_right.retarget(frame_dict)
-            q_l = retargeter_left.retarget(frame_dict)
+        poses = bvh.node_positions(centered="skeleton")
+        node_names = list(bvh.node_index.keys())
+        total_frames = poses.shape[0]
+        dt = getattr(bvh, "frame_time", 1.0 / 240.0)
+        fps = int(round(1.0 / dt)) if dt > 0 else 60
+        
+        print(f">>> Viser started. Frames: {total_frames} | FPS: {fps}")
 
-            visualizer.update(q_l, q_r)
-            
-            frame_idx = (frame_idx + 1) % total_frames
+        frame_idx = 0
+        try:
+            while True:
+                t_start = time.time()
 
-            elapsed = time.time() - t_start
-            delay = dt - elapsed
-            if delay > 0:
-                time.sleep(delay)
+                frame_dict = {
+                    name: poses[frame_idx, bvh.node_index[name], :]
+                    for name in node_names
+                }
 
-    except KeyboardInterrupt:
-        print("\n>>> Stopped by user.")
+                q_r = retargeter_right.retarget(frame_dict)
+                q_l = retargeter_left.retarget(frame_dict)
+
+                visualizer.update(q_l, q_r)
+                
+                frame_idx = (frame_idx + 1) % total_frames
+
+                elapsed = time.time() - t_start
+                delay = dt - elapsed
+                if delay > 0:
+                    time.sleep(delay)
+
+        except KeyboardInterrupt:
+            print("\n>>> Stopped by user.")
 
 if __name__ == "__main__":
-    main()
+    tyro.cli(main)

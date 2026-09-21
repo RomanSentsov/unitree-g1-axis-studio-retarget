@@ -1,5 +1,4 @@
 numpy
-rerun-sdk
 trimesh
 tyro
 yourdfpy
