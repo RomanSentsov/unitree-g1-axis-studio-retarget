@@ -28,8 +28,10 @@ class G1_29_ArmIK:
         # fixed cache file path
         self.cache_path = "cache/g1_29_model_cache.pkl"
 
-        self.urdf_path = "unitree_g1/models/urdf/g1_29dof_with_hand_rev_1_0.urdf"
-        self.model_dir = "unitree_g1/models"
+        # self.urdf_path = "unitree_g1/models/urdf/g1_29dof_with_hand_rev_1_0.urdf"
+        # self.model_dir = "unitree_g1/models"
+        self.urdf_path = 'unitree_g1/models/urdf/g1_29dof_with_hand_rev_1_0.urdf'
+        self.model_dir = 'unitree_g1/models'
 
         # Try loading cache first
         if os.path.exists(self.cache_path) and (not self.Visualization):

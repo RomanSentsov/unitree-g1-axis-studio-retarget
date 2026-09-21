@@ -19,7 +19,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/pelvis.STL"/>
+        <mesh filename="meshes/pelvis.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -35,7 +35,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/pelvis_contour_link.STL"/>
+        <mesh filename="meshes/pelvis_contour_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -44,7 +44,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/pelvis_contour_link.STL"/>
+        <mesh filename="meshes/pelvis_contour_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -63,7 +63,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_pitch_link.STL"/>
+        <mesh filename="meshes/left_hip_pitch_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -72,7 +72,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_pitch_link.STL"/>
+        <mesh filename="meshes/left_hip_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -92,7 +92,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_roll_link.STL"/>
+        <mesh filename="meshes/left_hip_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -101,7 +101,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_roll_link.STL"/>
+        <mesh filename="meshes/left_hip_roll_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -121,7 +121,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_yaw_link.STL"/>
+        <mesh filename="meshes/left_hip_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -130,7 +130,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_hip_yaw_link.STL"/>
+        <mesh filename="meshes/left_hip_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -150,7 +150,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_knee_link.STL"/>
+        <mesh filename="meshes/left_knee_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -159,7 +159,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_knee_link.STL"/>
+        <mesh filename="meshes/left_knee_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -179,7 +179,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/left_ankle_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -188,7 +188,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/left_ankle_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -208,7 +208,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_ankle_roll_link.STL"/>
+        <mesh filename="meshes/left_ankle_roll_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -255,7 +255,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_pitch_link.STL"/>
+        <mesh filename="meshes/right_hip_pitch_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -264,7 +264,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_pitch_link.STL"/>
+        <mesh filename="meshes/right_hip_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -284,7 +284,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_roll_link.STL"/>
+        <mesh filename="meshes/right_hip_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -293,7 +293,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_roll_link.STL"/>
+        <mesh filename="meshes/right_hip_roll_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -313,7 +313,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_yaw_link.STL"/>
+        <mesh filename="meshes/right_hip_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -322,7 +322,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_hip_yaw_link.STL"/>
+        <mesh filename="meshes/right_hip_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -342,7 +342,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_knee_link.STL"/>
+        <mesh filename="meshes/right_knee_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -351,7 +351,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_knee_link.STL"/>
+        <mesh filename="meshes/right_knee_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -371,7 +371,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/right_ankle_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -380,7 +380,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/right_ankle_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -400,7 +400,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_ankle_roll_link.STL"/>
+        <mesh filename="meshes/right_ankle_roll_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -449,7 +449,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/waist_yaw_link_rev_1_0.STL"/>
+        <mesh filename="meshes/waist_yaw_link_rev_1_0.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -472,7 +472,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/waist_roll_link_rev_1_0.STL"/>
+        <mesh filename="meshes/waist_roll_link_rev_1_0.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -495,7 +495,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/torso_link_rev_1_0.STL"/>
+        <mesh filename="meshes/torso_link_rev_1_0.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -504,7 +504,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/torso_link_rev_1_0.STL"/>
+        <mesh filename="meshes/torso_link_rev_1_0.STL"/>
       </geometry>
     </collision>
   </link>
@@ -531,7 +531,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/logo_link.STL"/>
+        <mesh filename="meshes/logo_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -540,7 +540,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/logo_link.STL"/>
+        <mesh filename="meshes/logo_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -555,7 +555,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/head_link.STL"/>
+        <mesh filename="meshes/head_link.STL"/>
       </geometry>
       <material name="dark">
         <color rgba="0.2 0.2 0.2 1"/>
@@ -564,7 +564,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/head_link.STL"/>
+        <mesh filename="meshes/head_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -616,7 +616,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_shoulder_pitch_link.STL"/>
+        <mesh filename="meshes/left_shoulder_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -645,7 +645,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_shoulder_roll_link.STL"/>
+        <mesh filename="meshes/left_shoulder_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -674,7 +674,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/left_shoulder_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -683,7 +683,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/left_shoulder_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -703,7 +703,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_elbow_link.STL"/>
+        <mesh filename="meshes/left_elbow_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -712,7 +712,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_elbow_link.STL"/>
+        <mesh filename="meshes/left_elbow_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -733,7 +733,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_shoulder_pitch_link.STL"/>
+        <mesh filename="meshes/right_shoulder_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -762,7 +762,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_shoulder_roll_link.STL"/>
+        <mesh filename="meshes/right_shoulder_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -791,7 +791,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/right_shoulder_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -800,7 +800,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/right_shoulder_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -820,7 +820,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_elbow_link.STL"/>
+        <mesh filename="meshes/right_elbow_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -829,7 +829,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_elbow_link.STL"/>
+        <mesh filename="meshes/right_elbow_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -858,7 +858,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_roll_link.STL"/>
+        <mesh filename="meshes/right_wrist_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -867,7 +867,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_roll_link.STL"/>
+        <mesh filename="meshes/right_wrist_roll_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -887,7 +887,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_pitch_link.STL"/>
+        <mesh filename="meshes/right_wrist_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -896,7 +896,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_pitch_link.STL"/>
+        <mesh filename="meshes/right_wrist_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -916,7 +916,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_yaw_link.STL"/>
+        <mesh filename="meshes/right_wrist_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -925,7 +925,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/right_wrist_yaw_link.STL"/>
+        <mesh filename="meshes/right_wrist_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -957,7 +957,7 @@
         rpy="3.1415926 0 3.1415926" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_hand_base_link.STL" />
+          filename="meshes/R_hand_base_link.STL" />
       </geometry>
       <material
         name="">
@@ -971,7 +971,7 @@
         rpy="3.1415926 0 3.1415926"  />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_hand_base_link.STL" />
+          filename="meshes/R_hand_base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -997,7 +997,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_proximal_base.STL" />
+          filename="meshes/R_thumb_proximal_base.STL" />
       </geometry>
       <material
         name="">
@@ -1011,7 +1011,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_proximal_base.STL" />
+          filename="meshes/R_thumb_proximal_base.STL" />
       </geometry>
     </collision>
   </link>
@@ -1055,7 +1055,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_proximal.STL" />
+          filename="meshes/R_thumb_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1069,7 +1069,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_proximal.STL" />
+          filename="meshes/R_thumb_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1113,7 +1113,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_intermediate.STL" />
+          filename="meshes/R_thumb_intermediate.STL" />
       </geometry>
       <material
         name="">
@@ -1127,7 +1127,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_intermediate.STL" />
+          filename="meshes/R_thumb_intermediate.STL" />
       </geometry>
     </collision>
   </link>
@@ -1175,7 +1175,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_distal.STL" />
+          filename="meshes/R_thumb_distal.STL" />
       </geometry>
       <material
         name="">
@@ -1189,7 +1189,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_thumb_distal.STL" />
+          filename="meshes/R_thumb_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1237,7 +1237,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_index_proximal.STL" />
+          filename="meshes/R_index_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1251,7 +1251,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_index_proximal.STL" />
+          filename="meshes/R_index_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1295,7 +1295,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_index_distal.STL" />
+          filename="meshes/R_index_distal.STL" />
       </geometry>
       <material
         name="">
@@ -1309,7 +1309,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_index_distal.STL" />
+          filename="meshes/R_index_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1357,7 +1357,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_middle_proximal.STL" />
+          filename="meshes/R_middle_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1371,7 +1371,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_middle_proximal.STL" />
+          filename="meshes/R_middle_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1415,7 +1415,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_middle_distal.STL" />
+          filename="meshes/R_middle_distal.STL" />
       </geometry>
       <material
         name="">
@@ -1429,7 +1429,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_middle_distal.STL" />
+          filename="meshes/R_middle_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1477,7 +1477,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_ring_proximal.STL" />
+          filename="meshes/R_ring_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1491,7 +1491,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_ring_proximal.STL" />
+          filename="meshes/R_ring_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1535,7 +1535,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_ring_distal.STL" />
+          filename="meshes/R_ring_distal.STL" />
       </geometry>
       <material
         name="">
@@ -1549,7 +1549,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_ring_distal.STL" />
+          filename="meshes/R_ring_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1597,7 +1597,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_pinky_proximal.STL" />
+          filename="meshes/R_pinky_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1611,7 +1611,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_pinky_proximal.STL" />
+          filename="meshes/R_pinky_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1655,7 +1655,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_pinky_distal.STL" />
+          filename="meshes/R_pinky_distal.STL" />
       </geometry>
       <material
         name="">
@@ -1669,7 +1669,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/R_pinky_distal.STL" />
+          filename="meshes/R_pinky_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1712,7 +1712,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_roll_link.STL"/>
+        <mesh filename="meshes/left_wrist_roll_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -1721,7 +1721,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_roll_link.STL"/>
+        <mesh filename="meshes/left_wrist_roll_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -1741,7 +1741,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_pitch_link.STL"/>
+        <mesh filename="meshes/left_wrist_pitch_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -1750,7 +1750,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_pitch_link.STL"/>
+        <mesh filename="meshes/left_wrist_pitch_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -1771,7 +1771,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_yaw_link.STL"/>
+        <mesh filename="meshes/left_wrist_yaw_link.STL"/>
       </geometry>
       <material name="white">
         <color rgba="0.7 0.7 0.7 1"/>
@@ -1780,7 +1780,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/left_wrist_yaw_link.STL"/>
+        <mesh filename="meshes/left_wrist_yaw_link.STL"/>
       </geometry>
     </collision>
   </link>
@@ -1812,7 +1812,7 @@
         rpy="0 0 3.1415926" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_hand_base_link.STL" />
+          filename="meshes/L_hand_base_link.STL" />
       </geometry>
       <material
         name="">
@@ -1826,7 +1826,7 @@
         rpy="0 0 3.1415926" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_hand_base_link.STL" />
+          filename="meshes/L_hand_base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -1852,7 +1852,7 @@
         rpy="0 0.3 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_proximal_base.STL" />
+          filename="meshes/L_thumb_proximal_base.STL" />
       </geometry>
       <material
         name="">
@@ -1866,7 +1866,7 @@
         rpy="0 0.3 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_proximal_base.STL" />
+          filename="meshes/L_thumb_proximal_base.STL" />
       </geometry>
     </collision>
   </link>
@@ -1910,7 +1910,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_proximal.STL" />
+          filename="meshes/L_thumb_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -1924,7 +1924,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_proximal.STL" />
+          filename="meshes/L_thumb_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -1968,7 +1968,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_intermediate.STL" />
+          filename="meshes/L_thumb_intermediate.STL" />
       </geometry>
       <material
         name="">
@@ -1982,7 +1982,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_intermediate.STL" />
+          filename="meshes/L_thumb_intermediate.STL" />
       </geometry>
     </collision>
   </link>
@@ -2030,7 +2030,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_distal.STL" />
+          filename="meshes/L_thumb_distal.STL" />
       </geometry>
       <material
         name="">
@@ -2044,7 +2044,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_thumb_distal.STL" />
+          filename="meshes/L_thumb_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2092,7 +2092,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_index_proximal.STL" />
+          filename="meshes/L_index_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -2106,7 +2106,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_index_proximal.STL" />
+          filename="meshes/L_index_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2150,7 +2150,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_index_distal.STL" />
+          filename="meshes/L_index_distal.STL" />
       </geometry>
       <material
         name="">
@@ -2164,7 +2164,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_index_distal.STL" />
+          filename="meshes/L_index_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2212,7 +2212,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_middle_proximal.STL" />
+          filename="meshes/L_middle_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -2226,7 +2226,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_middle_proximal.STL" />
+          filename="meshes/L_middle_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2270,7 +2270,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_middle_distal.STL" />
+          filename="meshes/L_middle_distal.STL" />
       </geometry>
       <material
         name="">
@@ -2284,7 +2284,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_middle_distal.STL" />
+          filename="meshes/L_middle_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2332,7 +2332,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_ring_proximal.STL" />
+          filename="meshes/L_ring_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -2346,7 +2346,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_ring_proximal.STL" />
+          filename="meshes/L_ring_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2390,7 +2390,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_ring_distal.STL" />
+          filename="meshes/L_ring_distal.STL" />
       </geometry>
       <material
         name="">
@@ -2404,7 +2404,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_ring_distal.STL" />
+          filename="meshes/L_ring_distal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2452,7 +2452,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_pinky_proximal.STL" />
+          filename="meshes/L_pinky_proximal.STL" />
       </geometry>
       <material
         name="">
@@ -2466,7 +2466,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_pinky_proximal.STL" />
+          filename="meshes/L_pinky_proximal.STL" />
       </geometry>
     </collision>
   </link>
@@ -2510,7 +2510,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_pinky_distal.STL" />
+          filename="meshes/L_pinky_distal.STL" />
       </geometry>
       <material
         name="">
@@ -2524,7 +2524,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="/home/linuxuser/unitree_noitom_teleop/unitree_g1/models/meshes/L_pinky_distal.STL" />
+          filename="meshes/L_pinky_distal.STL" />
       </geometry>
     </collision>
   </link>
