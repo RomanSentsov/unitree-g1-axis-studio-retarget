@@ -57,22 +57,6 @@ class G1_29_ArmIK:
                                             # "waist_yaw_joint" ,       # vertical axis # exclude to activate
                                             "waist_roll_joint" ,        # bend sideways
                                             "waist_pitch_joint" ,     # bend down
-                                            
-                                            # "left_hand_thumb_0_joint" ,
-                                            # "left_hand_thumb_1_joint" ,
-                                            # "left_hand_thumb_2_joint" ,
-                                            # "left_hand_middle_0_joint" ,
-                                            # "left_hand_middle_1_joint" ,
-                                            # "left_hand_index_0_joint" ,
-                                            # "left_hand_index_1_joint" ,
-                                            
-                                            # "right_hand_thumb_0_joint" ,
-                                            # "right_hand_thumb_1_joint" ,
-                                            # "right_hand_thumb_2_joint" ,
-                                            # "right_hand_index_0_joint" ,
-                                            # "right_hand_index_1_joint" ,
-                                            # "right_hand_middle_0_joint",
-                                            # "right_hand_middle_1_joint"
 
                                             "R_thumb_PIP_joint",
                                             "R_thumb_DIP_joint",
@@ -384,6 +368,9 @@ class G1_29_ArmIK:
 
         ## Args:
             bvh_frame: dict {node_name, np.array([x ,y, z])}
+
+        ## Returns:
+            q: List[15] angles: waist_yaw_joint, arm_r x 7, arm_l x 7 from shoulder to hand (NOT TESTED!!!)
         '''
 
         r_hand_x = bvh_frame["RightHandMiddle1"] - bvh_frame["RightHand"]

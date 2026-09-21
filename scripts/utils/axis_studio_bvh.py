@@ -91,6 +91,8 @@ class AxisStudioFK:
         "LeftHandPinky3": "LeftHandPinky2",
     }
 
+    NODE_NAMES = list(PARENT_MAP.keys())
+
     # CONSTANT AXIS -> OUR WORLD TRANSFORM
     # +90 deg around X   +90 deg around Z
 
