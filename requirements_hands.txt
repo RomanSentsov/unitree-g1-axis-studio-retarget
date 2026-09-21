@@ -8,3 +8,4 @@ torch
 pyyaml
 pytransform3d
 nlopt
+viser

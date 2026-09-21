@@ -1,19 +1,17 @@
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-import sys
 import time
+from pathlib import Path
 import pybvh
 import numpy as np
-from pathlib import Path
+import logging
+logging.getLogger("yourdfpy").setLevel(logging.ERROR)
 
-import rerun as rr
-import rerun.blueprint as rrb
+from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
+from hands_retargeting.viser_wrapper import ViserHandsVisualizer
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-    
-from hands_retargeting.retargeting_viewer import RobotHandView
-from hands_retargeting.retargeting_config import RetargetingConfig
 
 ASSETS_DIR = PROJECT_ROOT / "hands"
 BVH_FILEPATH = PROJECT_ROOT / "recs" / "bvh_recs" / "bvh_misha_no_xyz_chr01_MAYA.bvh"
@@ -24,7 +22,6 @@ CONFIG_PATH_LEFT = PROJECT_ROOT / "scripts" / "hands_retargeting" / "configs" / 
 URDF_PATH_RIGHT = ASSETS_DIR / "rh56dftp" / "rh56dftp_modified_right.urdf"
 URDF_PATH_LEFT = ASSETS_DIR / "rh56dftp" / "rh56dftp_modified_left.urdf"
 
-# bvh nodes (right + left hand)
 RIGHT_HAND_NODES = [
     "RightHand",
     "RightHandThumb1", "RightHandThumb2", "RightHandThumb3", "EndSiteRightHandThumb3",
@@ -43,109 +40,58 @@ LEFT_HAND_NODES = [
     "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "EndSiteLeftHandPinky3",
 ]
 
-SCALE = 0.01 # scale [cm] to [m]
-
-def get_hand_frame(keypoint_3d_array: np.ndarray) -> np.ndarray:
-        """
-        Originates from dex-retargeting repo
-        
-        Compute the 3D coordinate frame (orientation only) from detected 3d key points
-        :param points: keypoints detected with HaMeR. Order: [wrist, index, middle, pinky]
-        :return: the coordinate frame of wrist in MANO convention
-        """
-        assert keypoint_3d_array.shape == (21, 3)
-        points = keypoint_3d_array[[0, 5, 9], :]
-
-        # Compute vector from palm to the first joint of middle finger
-        x_vector = points[0] - points[2]
-
-        # Normal fitting with SVD
-        points = points - np.mean(points, axis=0, keepdims=True)
-        u, s, v = np.linalg.svd(points)
-
-        normal = v[2, :]
-
-        # Gram–Schmidt Orthonormalize
-        x = x_vector - np.sum(x_vector * normal) * normal
-        x = x / np.linalg.norm(x)
-        z = np.cross(x, normal)
-
-        # We assume that the vector from pinky to index is similar the z axis in MANO convention
-        if np.sum(z * (points[1] - points[2])) < 0:
-            normal *= -1
-            z *= -1
-        frame = np.stack([x, normal, z], axis=1)
-        return frame
-
 def main():
-    # load bvh data
+    # load bvh
     print(f">>> Loading BVH: {BVH_FILEPATH}")
     bvh = pybvh.read_bvh_file(str(BVH_FILEPATH))
-    bvh = bvh.reorient_world_up('+z')
+    bvh = bvh.reorient_world_up("+z")
     bvh = bvh.rotate_vertical(np.pi / 2)
 
     poses = bvh.node_positions(centered="skeleton")
-    r_indices = [bvh.node_index[name] for name in RIGHT_HAND_NODES]
-    l_indices = [bvh.node_index[name] for name in LEFT_HAND_NODES]
+    node_names = list(bvh.node_index.keys())
     total_frames = poses.shape[0]
     dt = getattr(bvh, "frame_time", 1.0 / 240.0)
-
-    # set rerun windows
-    origin_robot_left = "Robot_Hand_Left"
-    origin_robot_right = "Robot_Hand_Right"
-
-    blueprint = rrb.Blueprint(
-        rrb.Grid(
-            rrb.Spatial3DView(origin=origin_robot_left, name="Robot Left Hand URDF"),
-            rrb.Spatial3DView(origin=origin_robot_right, name="Robot Right Hand URDF"),
-            grid_columns=2
-        )
-    )
-    rr.init("bimanual_bvh_retargeting", spawn=True, default_blueprint=blueprint)
-
     fps = int(round(1.0 / dt)) if dt > 0 else 60
-    RetargetingConfig.set_default_urdf_dir(str(ASSETS_DIR))
-    retargeter_right = RetargetingConfig.load_from_file(str(CONFIG_PATH_RIGHT)).build()
-    robot_view_right = RobotHandView(
-        urdf_path=URDF_PATH_RIGHT,
-        retargeter=retargeter_right,
-        root_entity=origin_robot_right
+
+    # init retargeters
+    print(">>> Initialising retargeters...")
+    retargeter_right = HandRetargeterWrapper(
+        config_path=CONFIG_PATH_RIGHT,
+        joint_names=RIGHT_HAND_NODES,
+        assets_dir=ASSETS_DIR,
+    )
+    retargeter_left = HandRetargeterWrapper(
+        config_path=CONFIG_PATH_LEFT,
+        joint_names=LEFT_HAND_NODES,
+        assets_dir=ASSETS_DIR,
     )
 
-    retargeter_left = RetargetingConfig.load_from_file(str(CONFIG_PATH_LEFT)).build()
-    robot_view_left = RobotHandView(
-        urdf_path=URDF_PATH_LEFT,
-        retargeter=retargeter_left,
-        root_entity=origin_robot_left
+    # viser
+    visualizer = ViserHandsVisualizer(
+        urdf_left=URDF_PATH_LEFT,
+        urdf_right=URDF_PATH_RIGHT,
+        dof_names_left=retargeter_left.dof_joint_names,
+        dof_names_right=retargeter_right.dof_joint_names,
     )
 
-    print(f">>> Start: {total_frames} frames, FPS: {fps}.")
+    print(f">>> Viser started. Frames: {total_frames} | FPS: {fps}")
 
+    frame_idx = 0
     try:
-        frame = 0
         while True:
             t_start = time.time()
 
-            rr.set_time("frame_idx", sequence=frame)
-            rr.set_time("time", duration=frame * dt)
+            frame_dict = {
+                name: poses[frame_idx, bvh.node_index[name], :]
+                for name in node_names
+            }
 
-            # right
-            joints_r = poses[frame, r_indices, :] * SCALE
-            joints_r = joints_r - joints_r[0]
-            rot_r = get_hand_frame(joints_r)
-            joints_r_canonical = joints_r @ rot_r
+            q_r = retargeter_right.retarget(frame_dict)
+            q_l = retargeter_left.retarget(frame_dict)
 
-            robot_view_right.update(joints_r_canonical)
-
-            # left
-            joints_l = poses[frame, l_indices, :] * SCALE
-            joints_l = joints_l - joints_l[0]
-            rot_l = get_hand_frame(joints_l)
-            joints_l_canonical = joints_l @ rot_l
-
-            robot_view_left.update(joints_l_canonical)
-
-            frame = (frame + 1) % total_frames
+            visualizer.update(q_l, q_r)
+            
+            frame_idx = (frame_idx + 1) % total_frames
 
             elapsed = time.time() - t_start
             delay = dt - elapsed
@@ -153,11 +99,7 @@ def main():
                 time.sleep(delay)
 
     except KeyboardInterrupt:
-        print("\n>>> Dashboard Manager stopped.")
-    finally:
-        robot_view_right.close()
-        robot_view_left.close()
+        print("\n>>> Stopped by user.")
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
