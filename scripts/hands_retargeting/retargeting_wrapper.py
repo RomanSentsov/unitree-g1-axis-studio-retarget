@@ -9,6 +9,19 @@ R_hamer2urdf = np.array([
     [ 0, 0, 1] 
 ])
 
+END_SITE_MAP = {
+    "EndSiteRightHandThumb3": ("RightHandThumb3", "RightHandThumb2"),
+    "EndSiteRightHandIndex3": ("RightHandIndex3", "RightHandIndex2"),
+    "EndSiteRightHandMiddle3": ("RightHandMiddle3", "RightHandMiddle2"),
+    "EndSiteRightHandRing3": ("RightHandRing3", "RightHandRing2"),
+    "EndSiteRightHandPinky3": ("RightHandPinky3", "RightHandPinky2"),
+    "EndSiteLeftHandThumb3": ("LeftHandThumb3", "LeftHandThumb2"),
+    "EndSiteLeftHandIndex3": ("LeftHandIndex3", "LeftHandIndex2"),
+    "EndSiteLeftHandMiddle3": ("LeftHandMiddle3", "LeftHandMiddle2"),
+    "EndSiteLeftHandRing3": ("LeftHandRing3", "LeftHandRing2"),
+    "EndSiteLeftHandPinky3": ("LeftHandPinky3", "LeftHandPinky2"),
+}
+
 def get_hand_frame(keypoint_3d_array: np.ndarray) -> np.ndarray:
     """
     Originates from dex-retargeting repo
@@ -78,6 +91,16 @@ class HandRetargeterWrapper:
         :param frame_dict: {joint_name: [x, y, z]}
         :return: target joint positions array (qpos)
         """
+        frame = dict(frame_dict)
+        
+        # add end site joints (for online mode)
+        for tip_name, (j3_name, j2_name) in self.END_SITE_MAP.items():
+            if tip_name in self.joint_names and tip_name not in frame:
+                if j3_name in frame and j2_name in frame:
+                    p3 = np.asarray(frame[j3_name], dtype=np.float64)
+                    p2 = np.asarray(frame[j2_name], dtype=np.float64)
+                    frame[tip_name] = p3 + (p3 - p2) * 0.75
+        
         # check missing joints
         missing_joints = [name for name in self.joint_names if name not in frame_dict]
         if missing_joints:
