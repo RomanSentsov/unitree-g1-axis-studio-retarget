@@ -1,0 +1,10 @@
+numpy
+trimesh
+tyro
+yourdfpy
+pybvh
+torch
+pyyaml
+pytransform3d
+nlopt
+viser
