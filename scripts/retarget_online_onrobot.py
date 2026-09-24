@@ -1,6 +1,7 @@
 from pin_opti import G1_29_ArmIK
 from utils.axis_studio_bvh import AxisStudioFK
 import time
+from unitree_g1.unitree_g1 import UnitreeG1
 
 from mocap_api import *
 
@@ -16,6 +17,8 @@ class MocapAxisDemo:
 
         # init arm ik (retargeter)
         self.arm_ik = G1_29_ArmIK(Unit_Test=True, Visualization=True)
+
+        self.real_robot = UnitreeG1()
 
         self.debug_printed = False
 
@@ -37,6 +40,8 @@ class MocapAxisDemo:
         )
         self.running = True
 
+        self.real_robot.enable_arm_sdk(duration=8.0)
+
         try:
             while self.running:
                 evts = self.app.poll_next_event()
@@ -52,13 +57,16 @@ class MocapAxisDemo:
 
     def stop(self):
         self.running = False
+
+        # turn off the robot arm sdk!!!
+        self.real_robot.disable_arm_sdk(duration=3.0)
+        time.sleep(4.0)
+
         if self.app:
             self.app.close()
             print("Mocap application closed")
 
     def _handle_avatar_data(self, evt):
-
-        # print("received")
 
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
@@ -91,12 +99,19 @@ class MocapAxisDemo:
 
         # Retarget
         bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
-        print(bvh_frame)
-        exit()
         until = time.time()
 
         # Solve ik in this block
         q, _ = self.arm_ik.solve_ik_bvh_frame(bvh_frame)
+
+        # apply on robot
+        q_waist = [q[0], 0., 0.] #yaw, roll, pitch
+        q_left_arm = q[1:8]
+        q_right_arm = q[8:15]
+
+        self.real_robot.set_arm_l(q_left_arm)
+        self.real_robot.set_arm_r(q_right_arm)
+        self.real_robot.set_waist(q_waist)
 
         elapsed = time.time() - until
         print(f"Retarget solved in: {elapsed * 1000.0:.2f} ms")
