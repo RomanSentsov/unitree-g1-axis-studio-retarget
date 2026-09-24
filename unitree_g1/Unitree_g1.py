@@ -145,7 +145,7 @@ class UnitreeG1:
         self.subscriber.Init(self._low_state_handler, 10)
 
         # Hands:
-        self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
+        # self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
         self.hand_l = InspireHandTCP(host="192.168.123.210", port=6000) 
 
         #
