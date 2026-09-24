@@ -234,6 +234,9 @@ class UnitreeG1:
         self.target_pos_r = list(q)
 
     def set_waist(self, q):
+        '''
+        Args: (waist_yaw(== rot around z), waist_roll, waist_pitch)
+        '''
         if len(q) != 3:
             raise ValueError("set_waist: нужно 3 значения")
         self.target_pos_waist = list(q)
