@@ -6,6 +6,9 @@ from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
 from hands_retargeting.viser_wrapper import ViserHandsVisualizer
 
 from mocap_api import *
+import logging
+
+logging.getLogger("yourdfpy").setLevel(logging.ERROR)
 
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

@@ -149,7 +149,7 @@ class AxisStudioFK:
 
         ## Args:
 
-            joint_dict - dict of (joint_idx, joint_name)
+            joint_dict - dict of (joint_idx, joint) from Axis Studio
             joint_name - name of joint to find global transform of
             parent map, relative_to_hips - do not change for unitree_g1 and axis_studio
             _cache - if in a single time frame FK is being calculated for multiple joints, pass {} to speed up calscs.
