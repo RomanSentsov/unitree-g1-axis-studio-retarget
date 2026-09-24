@@ -58,7 +58,7 @@ class MocapAxisDemo:
 
     def _handle_avatar_data(self, evt):
 
-        print("received")
+        # print("received")
 
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
