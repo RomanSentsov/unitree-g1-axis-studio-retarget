@@ -27,7 +27,7 @@ class MocapAxisDemo:
         settings.set_udp(udp_port)
         # Should be coherent with Axis Studio BVH stream settings
         settings.set_bvh_rotation(
-            MCPBvhRotation.YXZ
+            MCPBvhRotation.XYZ
         )
         self.app.set_settings(settings)
         self.app.open()
@@ -57,6 +57,8 @@ class MocapAxisDemo:
             print("Mocap application closed")
 
     def _handle_avatar_data(self, evt):
+
+        print("received")
 
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
@@ -88,7 +90,7 @@ class MocapAxisDemo:
         _cache = {}
 
         # Retarget
-        bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache) for name in AxisStudioFK.NODE_NAMES}
+        bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
         until = time.time()
 
         # Solve ik in this block

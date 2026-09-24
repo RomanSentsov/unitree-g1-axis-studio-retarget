@@ -108,7 +108,8 @@ class AxisStudioFK:
         [0, 0,  0, 1],
     ], dtype=float)
 
-    def axis_quaternion_to_scipy(self, q):
+    @staticmethod
+    def axis_quaternion_to_scipy(q):
         """
         (w, x, y, z) -> R
         """
@@ -118,15 +119,15 @@ class AxisStudioFK:
 
         return R.from_quat([x, y, z, w])
 
-
-    def quat_to_matrix(self, q):
+    @staticmethod
+    def quat_to_matrix(q):
         """
         R -> 3x3 matrix.
         """
 
         return AxisStudioFK.axis_quaternion_to_scipy(q).as_matrix()
 
-
+    @staticmethod
     def matrix_to_scipy_quat(self, mat):
         """
         3x3 matrix -> (x,y,z,w)
@@ -135,8 +136,8 @@ class AxisStudioFK:
         return R.from_matrix(mat).as_quat()
 
     # FK
-
-    def get_global_transform(self, 
+    @staticmethod
+    def get_global_transform(
         joints_dict,
         joint_name,
         parent_map=None,
