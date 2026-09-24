@@ -1,0 +1,12 @@
+numpy==1.26.4
+pin==3.1.0
+plusml-rh56dftp
+trimesh
+tyro
+yourdfpy
+pybvh
+torch
+pyyaml
+pytransform3d
+nlopt
+viser
