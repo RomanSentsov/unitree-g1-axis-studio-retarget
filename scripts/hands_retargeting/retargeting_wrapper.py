@@ -94,7 +94,7 @@ class HandRetargeterWrapper:
         frame = dict(frame_dict)
         
         # add end site joints (for online mode)
-        for tip_name, (j3_name, j2_name) in self.END_SITE_MAP.items():
+        for tip_name, (j3_name, j2_name) in END_SITE_MAP.items():
             if tip_name in self.joint_names and tip_name not in frame:
                 if j3_name in frame and j2_name in frame:
                     p3 = np.asarray(frame[j3_name], dtype=np.float64)
@@ -102,7 +102,7 @@ class HandRetargeterWrapper:
                     frame[tip_name] = p3 + (p3 - p2) * 0.75
         
         # check missing joints
-        missing_joints = [name for name in self.joint_names if name not in frame_dict]
+        missing_joints = [name for name in self.joint_names if name not in frame]
         if missing_joints:
             warnings.warn(
                 f">>> [HandRetargeterWrapper] Missing joints: {missing_joints}. "
@@ -112,7 +112,7 @@ class HandRetargeterWrapper:
             return self.last_qpos.copy()
 
         # get joints positions & scale them
-        raw_points = np.array([frame_dict[name] for name in self.joint_names], dtype=np.float64)
+        raw_points = np.array([frame[name] for name in self.joint_names], dtype=np.float64)
         joints = raw_points * self.scale
 
         # prepare frame

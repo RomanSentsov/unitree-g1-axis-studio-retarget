@@ -63,12 +63,12 @@ class MocapAxisDemo:
         )
 
         # viser
-        self.visualizer = ViserHandsVisualizer(
-            urdf_left=URDF_PATH_LEFT,
-            urdf_right=URDF_PATH_RIGHT,
-            dof_names_left=self.retargeter_left.dof_joint_names,
-            dof_names_right=self.retargeter_right.dof_joint_names,
-        )
+        # self.visualizer = ViserHandsVisualizer(
+        #     urdf_left=URDF_PATH_LEFT,
+        #     urdf_right=URDF_PATH_RIGHT,
+        #     dof_names_left=self.retargeter_left.dof_joint_names,
+        #     dof_names_right=self.retargeter_right.dof_joint_names,
+        # )
 
         self.all_hand_nodes = RIGHT_HAND_NODES + LEFT_HAND_NODES
 
@@ -155,7 +155,6 @@ class MocapAxisDemo:
         q_l_hand = self.retargeter_left.retarget(bvh_frame)
         print(q_r_hand)
 
-        self.visualizer.update(q_l_hand, q_r_hand)
 
         elapsed = time.time() - until
         print(f"Whole retarget solved in: {elapsed * 1000.0:.2f} ms")
