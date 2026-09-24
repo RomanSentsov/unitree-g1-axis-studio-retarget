@@ -2,6 +2,11 @@ from pin_opti import G1_29_ArmIK
 from utils.axis_studio_bvh import AxisStudioFK
 import time
 
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from unitree_g1.Unitree_g1 import UnitreeG1
+
 from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
 from hands_retargeting.viser_wrapper import ViserHandsVisualizer
 
@@ -40,6 +45,8 @@ LEFT_HAND_NODES = [
     "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "EndSiteLeftHandPinky3",
 ]
 
+
+REAL_ROBOT = False
 # Application class
 class MocapAxisDemo:
 
@@ -75,6 +82,9 @@ class MocapAxisDemo:
 
         self.all_hand_nodes = RIGHT_HAND_NODES + LEFT_HAND_NODES
 
+        self.real_robot = None
+        if REAL_ROBOT:
+            self.real_robot = UnitreeG1()
 
         self.debug_printed = False
 
@@ -96,6 +106,9 @@ class MocapAxisDemo:
         )
         self.running = True
 
+        if REAL_ROBOT:
+            self.real_robot.enable_arm_sdk(duration=8.0)
+
         try:
             while self.running:
                 evts = self.app.poll_next_event()
@@ -111,6 +124,11 @@ class MocapAxisDemo:
 
     def stop(self):
         self.running = False
+
+        if REAL_ROBOT:
+            self.real_robot.disable_arm_sdk(duration=3.0)
+            time.sleep(4.0)
+        
         if self.app:
             self.app.close()
             print("Mocap application closed")
@@ -135,7 +153,7 @@ class MocapAxisDemo:
                 - self.prev_posture_time_ms
             )
 
-            if delta_ms < 100.0:
+            if delta_ms < 33.0:
                 return
 
         self.prev_posture_time_ms = current_time_ms
@@ -154,9 +172,21 @@ class MocapAxisDemo:
 
         # Solve ik in this block
         q, _ = self.arm_ik.solve_ik_bvh_frame(bvh_frame)
-        q_r_hand = self.retargeter_right.retarget(bvh_frame)
-        q_l_hand = self.retargeter_left.retarget(bvh_frame)
-        print(q_r_hand)
+        q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+        q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+
+        # apply on robot
+        if REAL_ROBOT:
+            q_waist = [q[0], 0., 0.] #yaw, roll, pitch
+            q_left_arm = q[1:8]
+            q_right_arm = q[8:15]
+
+            self.real_robot.set_arm_l(q_left_arm)
+            self.real_robot.set_arm_r(q_right_arm)
+            self.real_robot.set_waist(q_waist)
+
+            # self.real_robot.set_hand_l(q_l_hand)
+            # self.real_robot.set_hand_r(q_r_hand)
 
 
         elapsed = time.time() - until

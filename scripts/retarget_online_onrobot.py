@@ -103,6 +103,9 @@ class MocapAxisDemo:
 
         # Solve ik in this block
         q, _ = self.arm_ik.solve_ik_bvh_frame(bvh_frame)
+        q_r_hand = self.retargeter_right.retarget(bvh_frame)
+        q_l_hand = self.retargeter_left.retarget(bvh_frame)
+
 
         # apply on robot
         q_waist = [q[0], 0., 0.] #yaw, roll, pitch
