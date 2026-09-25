@@ -2,10 +2,13 @@
 """ROS 2 /joint_states -> Unitree G1 (rt/arm_sdk)."""
 
 import time
+import numpy as np
 
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
+
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,7 +18,10 @@ from unitree_g1.Unitree_g1 import UnitreeG1
 IFNAME = "enxc84d4427fee8"
 CONTROL_DT = 0.05              # 20 Гц
 ENABLE_DURATION = 5.0
-TOPIC = "/joint_states"
+
+TOPIC_ARMS = "/joint_states"
+TOPIC_R_HAND = "/hand_state/r"
+TOPIC_L_HAND = "/hand_state/l"
 
 LEFT_ARM_NAMES = [
     "left_shoulder_pitch_joint",
@@ -70,8 +76,10 @@ class Bridge(Node):
         super().__init__("joint_states_to_g1")
         self.g1 = g1
         self.last_send = 0.0
-        self.create_subscription(JointState, TOPIC, self.on_msg, 10)
-        self.get_logger().info(f"слушаю {TOPIC}")
+        self.create_subscription(JointState, TOPIC_ARMS, self.on_msg_arms, 10)
+        self.create_subscription(Float64MultiArray, TOPIC_R_HAND, self.on_msg_r_hand, 10)
+        self.create_subscription(Float64MultiArray, TOPIC_L_HAND, self.on_msg_l_hand, 10)
+        self.get_logger().info(f"слушаю топики")
 
     def to_inspire(self, value_rad, max_rad):
         """0..max_rad -> 0..1000 для Inspire Hand."""
@@ -80,8 +88,8 @@ class Bridge(Node):
         v = max(0.0, min(max_rad, value_rad))
         return int(1000.0 * v / max_rad)
 
-    def on_msg(self, msg):
-        # 20 Гц
+    def on_msg_arms(self, msg):
+  
         now = time.time()
         print(f"reseived msg with stamp time {msg}")
 
@@ -102,6 +110,14 @@ class Bridge(Node):
         #         for n, m in zip(RIGHT_HAND_NAMES, RIGHT_HAND_MAX)]
         # self.g1.set_hand_l(hand_l)
         # self.g1.set_hand_r(hand_r)
+
+    def on_msg_l_hand(self, msg):
+        q = np.array(msg.data) * 1800 * 4 / 3.14
+        self.g1.set_hand_l(q)
+
+    def on_msg_r_hand(self, msg):
+        q = np.array(msg.data) * 1800 * 4 / 3.14
+        # self.g1.set_hand_r(q)
 
 
 def main():
