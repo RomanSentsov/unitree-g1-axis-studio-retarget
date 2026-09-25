@@ -142,7 +142,6 @@ class MocapAxisDemo:
         self.pub_joints = self.ros_node.create_publisher(JointState, "/joint_states", 10)
         self.pub_hand_l = self.ros_node.create_publisher(Float64MultiArray, "/hand_state/l", 10)
         self.pub_hand_r = self.ros_node.create_publisher(Float64MultiArray, "/hand_state/r", 10)
-        self.timer = self.ros_node.create_timer(0.02, lambda: self.publish_joint_state())
         self.debug_printed = False
 
 
@@ -164,17 +163,17 @@ class MocapAxisDemo:
         self.running = True
 
         try:
-            rclpy.spin(self.ros_node)
+            while self.running:
+                evts = self.app.poll_next_event()
+                for evt in evts:
+
+                    if evt.event_type == MCPEventType.AvatarUpdated:
+                        self._handle_avatar_data(evt)
         except KeyboardInterrupt:
             print("Program interrupted by user")
         finally:
             self.stop()
 
-    def publish_joint_state(self):
-        evts = self.app.poll_next_event()
-        for evt in evts:
-            if evt.event_type == MCPEventType.AvatarUpdated:
-                self._handle_avatar_data(evt)
 
     def stop(self):
         self.running = False
@@ -192,6 +191,16 @@ class MocapAxisDemo:
 
         # joint data
         joints = avatar.get_joints()
+
+        # hour, minute, second, millisecond = avatar.get_avatar_posture_time()
+        # current_time_ms = ((hour * 3600 + minute * 60 + second) * 1000 + millisecond)
+        current_time_ms = time.time()
+        if self.prev_posture_time_ms is not None:
+            delta_ms = current_time_ms - self.prev_posture_time_ms
+            if (delta_ms < 0.030):
+                return
+            print(f"=====Frame interval: {delta_ms} ms")
+        self.prev_posture_time_ms = current_time_ms
 
         current_time_ms = time.time() * 1000.0 # TODO change to time from joint_data
 
