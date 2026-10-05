@@ -45,7 +45,7 @@ https://github.com/pnmocap/mocap_ros_urdf
 
 Set up the correct parameters in Axis Studio settings to broadcast BVH (BVH - Edit to broadcast data from edit mode, BVH - Capturing to broadcast the current state of the costume)
 
-![alt text](docs\image.png)
+![alt text](docs/image.png)
 
 ### Interface setup
 
