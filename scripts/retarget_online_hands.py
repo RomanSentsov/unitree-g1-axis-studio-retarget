@@ -197,7 +197,7 @@ class MocapAxisDemo:
         current_time_ms = time.time()
         if self.prev_posture_time_ms is not None:
             delta_ms = current_time_ms - self.prev_posture_time_ms
-            if (delta_ms < 0.030):
+            if (delta_ms < 0.015):
                 return
             print(f"=====Frame interval: {delta_ms} ms")
         self.prev_posture_time_ms = current_time_ms
@@ -223,7 +223,7 @@ class MocapAxisDemo:
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
 
         stamp = self.ros_node.get_clock().now().to_msg()
-        print(q)
+        # print(q)
 
         # publish arm and waist joints
         js = JointState()

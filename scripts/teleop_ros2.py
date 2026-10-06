@@ -16,7 +16,7 @@ from unitree_g1.Unitree_g1 import UnitreeG1
 
 
 IFNAME = "enxc84d4427fee8"
-CONTROL_DT = 0.05              # 20 Гц
+CONTROL_DT = 0.02              # 50 Гц
 ENABLE_DURATION = 5.0
 
 TOPIC_ARMS = "/joint_states"
@@ -91,7 +91,7 @@ class Bridge(Node):
     def on_msg_arms(self, msg):
   
         now = time.time()
-        print(f"reseived msg with stamp time {msg}")
+        # print(f"reseived msg with stamp time {msg}")
 
         self.last_send = now
 

@@ -134,7 +134,7 @@ class UnitreeG1:
         self.first_update = False
         self.crc = CRC()
 
-        self.kp = 60.0
+        self.kp = 80.0
         self.kd = 1.5
         self.control_dt = control_dt
 
@@ -206,7 +206,7 @@ class UnitreeG1:
         # Руки и торс — одинаково
         self._fill(self.target_pos_l, LEFT_ARM_JOINTS, self.kp, self.kd)
         self._fill(self.target_pos_r, RIGHT_ARM_JOINTS, self.kp, self.kd)
-        self._fill(self.target_pos_waist, WAIST_JOINTS, 100.0, self.kd)
+        self._fill(self.target_pos_waist, WAIST_JOINTS, 350.0, 2.5)
 
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.publisher.Write(self.low_cmd)
