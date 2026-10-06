@@ -1,3 +1,7 @@
+# Versions
+
+If you need stable version of the project, please use code from latest tags
+
 # Description
 
 This repo contains code to:

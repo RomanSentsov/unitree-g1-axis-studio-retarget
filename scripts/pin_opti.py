@@ -296,7 +296,10 @@ class G1_29_ArmIK:
         robot_right_pose[:3, 3] *= scale_factor
         return robot_left_pose, robot_right_pose
 
-    def solve_ik(self, left_wrist, right_wrist, left_elbow, right_elbow, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None):
+    def scale_bend(self, x, a = -5., b=0.):
+        return a*x + b
+
+    def solve_ik(self, left_wrist, right_wrist, left_elbow, right_elbow, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None, BendToBalance = False):
         if current_lr_arm_motor_q is not None:
             self.init_data = current_lr_arm_motor_q
         self.opti.set_initial(self.var_q, self.init_data)
@@ -337,6 +340,11 @@ class G1_29_ArmIK:
             if self.Visualization:
                 self.vis.display(sol_q)  # for visualization
 
+            if BendToBalance:
+                com = self.reduced_robot.com()
+                bend_q = self.scale_bend(com[0])
+                return sol_q, sol_tauff, bend_q
+
             return sol_q, sol_tauff
         
         except Exception as e:
@@ -360,9 +368,14 @@ class G1_29_ArmIK:
                 self.vis.display(sol_q)  # for visualization
 
             # return sol_q, sol_tauff
+            if BendToBalance:
+                com = self.reduced_robot.com()
+                bend_q = self.scale_bend(com[0])
+                return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv), bend_q
+            
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
 
-    def solve_ik_bvh_frame(self, bvh_frame):
+    def solve_ik_bvh_frame(self, bvh_frame, BendToBalance = False):
         '''
         Same as solve_ik, but takes whole bvh frame as input and parses it
 
@@ -406,7 +419,7 @@ class G1_29_ArmIK:
             bvh_frame["LeftForeArm"]/150,
         )
 
-        return (self.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous))
+        return (self.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous, BendToBalance=BendToBalance))
 
 
 
