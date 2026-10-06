@@ -117,7 +117,7 @@ class Bridge(Node):
 
     def on_msg_r_hand(self, msg):
         q = np.array(msg.data) * 1800 * 4 / 3.14
-        # self.g1.set_hand_r(q)
+        self.g1.set_hand_r(q)
 
 
 def main():
