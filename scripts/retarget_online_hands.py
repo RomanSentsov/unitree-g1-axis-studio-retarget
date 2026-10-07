@@ -14,7 +14,6 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
-from hands_retargeting.viser_wrapper import ViserHandsVisualizer
 
 from mocap_api import *
 import logging
@@ -202,7 +201,7 @@ class MocapAxisDemo:
             print(f"=====Frame interval: {delta_ms} ms")
         self.prev_posture_time_ms = current_time_ms
 
-        current_time_ms = time.time() * 1000.0 # TODO change to time from joint_data
+        current_time_ms = time.time() * 1000.0
 
         # joint names
         joints_dict = {

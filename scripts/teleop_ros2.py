@@ -8,6 +8,8 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -76,9 +78,16 @@ class Bridge(Node):
         super().__init__("joint_states_to_g1")
         self.g1 = g1
         self.last_send = 0.0
-        self.create_subscription(JointState, TOPIC_ARMS, self.on_msg_arms, 10)
-        self.create_subscription(Float64MultiArray, TOPIC_R_HAND, self.on_msg_r_hand, 10)
-        self.create_subscription(Float64MultiArray, TOPIC_L_HAND, self.on_msg_l_hand, 10)
+
+        # Hand callback takes forever blocking arm cb's
+        # So we put them in different ExecutorCallbackGroups
+        arm_cb_group = MutuallyExclusiveCallbackGroup()
+        hand_r_cb_group = MutuallyExclusiveCallbackGroup()
+        hand_l_cb_group = MutuallyExclusiveCallbackGroup()
+
+        self.create_subscription(JointState, TOPIC_ARMS, self.on_msg_arms, 10, callback_group=arm_cb_group)
+        self.create_subscription(Float64MultiArray, TOPIC_R_HAND, self.on_msg_r_hand, 1, callback_group=hand_r_cb_group)
+        self.create_subscription(Float64MultiArray, TOPIC_L_HAND, self.on_msg_l_hand, 1, callback_group=hand_l_cb_group)
         self.get_logger().info(f"слушаю топики")
 
     def to_inspire(self, value_rad, max_rad):
@@ -91,7 +100,6 @@ class Bridge(Node):
     def on_msg_arms(self, msg):
   
         now = time.time()
-        # print(f"reseived msg with stamp time {msg}")
 
         self.last_send = now
 
@@ -103,13 +111,6 @@ class Bridge(Node):
         self.g1.set_arm_l(vec(LEFT_ARM_NAMES))
         self.g1.set_arm_r(vec(RIGHT_ARM_NAMES))
         self.g1.set_waist(vec(WAIST_NAMES))
-
-        # hand_l = [self.to_inspire(jp.get(n, 0.0), m)
-        #         for n, m in zip(LEFT_HAND_NAMES, LEFT_HAND_MAX)]
-        # hand_r = [self.to_inspire(jp.get(n, 0.0), m)
-        #         for n, m in zip(RIGHT_HAND_NAMES, RIGHT_HAND_MAX)]
-        # self.g1.set_hand_l(hand_l)
-        # self.g1.set_hand_r(hand_r)
 
     def on_msg_l_hand(self, msg):
         q = np.array(msg.data) * 1800 * 4 / 3.14
@@ -124,26 +125,30 @@ def main():
     rclpy.init()
     print("ros2 inited")
 
+
     g1 = UnitreeG1(ifname=IFNAME, control_dt=CONTROL_DT)
     print("g1 inited")
+
     node = Bridge(g1)
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
     print("node inited")
 
+    print("will start enabling hands in 5 seconds")
     time.sleep(5.0)
 
     g1.enable_arm_sdk(duration=ENABLE_DURATION)
     print(f"включаю arm_sdk ({ENABLE_DURATION} c)...")
-    # time.sleep(ENABLE_DURATION + 0.2)
 
     try:
-        rclpy.spin(node)
+        executor.spin()
     except KeyboardInterrupt:
         pass
     finally:
         print("выключаю arm_sdk...")
         g1.disable_arm_sdk(duration=ENABLE_DURATION)
-        # g1.hand_r.open()
-        # g1.hand_l.open()
+        g1.hand_r.open()
+        g1.hand_l.open()
         time.sleep(ENABLE_DURATION + 0.2)
         g1.shutdown()
         node.destroy_node()
