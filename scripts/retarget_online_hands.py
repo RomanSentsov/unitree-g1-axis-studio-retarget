@@ -196,7 +196,7 @@ class MocapAxisDemo:
         current_time_ms = time.time()
         if self.prev_posture_time_ms is not None:
             delta_ms = current_time_ms - self.prev_posture_time_ms
-            if (delta_ms < 0.015):
+            if (delta_ms < 0.02):
                 return
             print(f"=====Frame interval: {delta_ms} ms")
         self.prev_posture_time_ms = current_time_ms
@@ -216,7 +216,8 @@ class MocapAxisDemo:
         until = time.time()
 
         # Solve ik in this block
-        q, _ = self.arm_ik.solve_ik_bvh_frame(bvh_frame)
+        q_bend = 0.
+        q, _, q_bend = self.arm_ik.solve_ik_bvh_frame(bvh_frame, BendToBalance=True)
 
         q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
@@ -230,6 +231,7 @@ class MocapAxisDemo:
         js.name = G1_FULL_JOINT_NAMES
         joint_positions = [0.0] * len(G1_FULL_JOINT_NAMES)
         joint_positions[G1_FULL_JOINT_NAMES.index("waist_yaw_joint")] = float(q[0])
+        joint_positions[G1_FULL_JOINT_NAMES.index("waist_pitch_joint")] = float(q_bend)
 
         right_arm = [
             "right_shoulder_pitch_joint",
