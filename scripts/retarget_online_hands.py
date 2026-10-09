@@ -18,6 +18,8 @@ from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
 from mocap_api import *
 import logging
 
+from threading import Thread
+
 logging.getLogger("yourdfpy").setLevel(logging.ERROR)
 
 from pathlib import Path
@@ -116,8 +118,9 @@ class MocapAxisDemo:
         self.app = None
         self.running = False
 
+        self.current_evt = None
         self.prev_posture_time_ms = None
-
+        self.freq = 50
         # init arm ik (retargeter)
         self.arm_ik = G1_29_ArmIK(False)
 
@@ -161,17 +164,34 @@ class MocapAxisDemo:
         )
         self.running = True
 
+        # Separate thread for retargeting, pillung bvh from buffer
+        self.retarget_thread = Thread(target=self.start_retarget, daemon=True)
+        self.retarget_thread.start()
+
         try:
             while self.running:
                 evts = self.app.poll_next_event()
                 for evt in evts:
-
                     if evt.event_type == MCPEventType.AvatarUpdated:
-                        self._handle_avatar_data(evt)
+                        self.current_evt = evt
         except KeyboardInterrupt:
             print("Program interrupted by user")
         finally:
             self.stop()
+
+    def start_retarget(self):
+
+        while self.running:
+            start_time = time.time()
+            # retarget
+            if self.current_evt != None:
+                self._handle_avatar_data(self.current_evt)
+
+            elapsed = time.time() - start_time
+
+            print(f"frame solved in {elapsed}")
+            if(elapsed < 1/self.freq):
+                time.sleep(1/self.freq - elapsed)
 
 
     def stop(self):
@@ -193,15 +213,17 @@ class MocapAxisDemo:
 
         # hour, minute, second, millisecond = avatar.get_avatar_posture_time()
         # current_time_ms = ((hour * 3600 + minute * 60 + second) * 1000 + millisecond)
-        current_time_ms = time.time()
-        if self.prev_posture_time_ms is not None:
-            delta_ms = current_time_ms - self.prev_posture_time_ms
-            if (delta_ms < 0.02):
-                return
-            print(f"=====Frame interval: {delta_ms} ms")
-        self.prev_posture_time_ms = current_time_ms
 
-        current_time_ms = time.time() * 1000.0
+        # Prev frame sparcer
+        # current_time_ms = time.time()
+        # if self.prev_posture_time_ms is not None:
+        #     delta_ms = current_time_ms - self.prev_posture_time_ms
+        #     if (delta_ms < 0.02):
+        #         return
+        #     print(f"=====Frame interval: {delta_ms} ms")
+        # self.prev_posture_time_ms = current_time_ms
+
+        # current_time_ms = time.time() * 1000.0
 
         # joint names
         joints_dict = {
@@ -213,17 +235,15 @@ class MocapAxisDemo:
 
         # Retarget
         bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
-        until = time.time()
+        # until = time.time()
 
         # Solve ik in this block
-        q_bend = 0.
         q, _, q_bend = self.arm_ik.solve_ik_bvh_frame(bvh_frame, BendToBalance=True)
 
         q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
 
         stamp = self.ros_node.get_clock().now().to_msg()
-        # print(q)
 
         # publish arm and waist joints
         js = JointState()
@@ -272,8 +292,8 @@ class MocapAxisDemo:
         js.data = [float(x) for x in q_l_hand]
         self.pub_hand_l.publish(js)
         
-        elapsed = time.time() - until
-        print(f"Solved and published in: {elapsed * 1000.0:.2f} ms")
+        # elapsed = time.time() - until
+        # print(f"Solved and published in: {elapsed * 1000.0:.2f} ms")
 
 
 if __name__ == "__main__":
