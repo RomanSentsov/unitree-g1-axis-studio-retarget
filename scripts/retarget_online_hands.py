@@ -4,6 +4,7 @@ import time
 import array
 
 import numpy as np
+import matplotlib.pyplot as plt
 # for publishing hand and joint states
 import rclpy
 from rclpy.node import Node
@@ -124,6 +125,10 @@ class MocapAxisDemo:
         # init arm ik (retargeter)
         self.arm_ik = G1_29_ArmIK(False)
 
+        self.time_arms_arr = []
+        self.time_hand_l_arr = []
+        self.time_hand_r_arr = []
+
         # hand retarget
         self.retargeter_right = HandRetargeterWrapper(
             config_path=CONFIG_PATH_RIGHT,
@@ -197,6 +202,21 @@ class MocapAxisDemo:
     def stop(self):
         self.running = False
 
+            # Номера точек по x (общие для всех)
+        x = list(range(len(self.time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
+
+        # Строим линии
+        plt.plot(x, self.time_arms_arr, marker='o', label='Руки')
+        plt.plot(x, self.time_hand_l_arr, marker='s', label='Левая кисть')
+        plt.plot(x, self.time_hand_r_arr, marker='^', label='Правая кисть')
+
+        plt.xlabel('Номер точки')
+        plt.ylabel('Время ретаргетинга')
+        plt.title('Время ретаргетинга')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
         rclpy.shutdown()
         
         if self.app:
@@ -204,7 +224,6 @@ class MocapAxisDemo:
             print("Mocap application closed")
 
     def _handle_avatar_data(self, evt):
-
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
 
@@ -237,11 +256,23 @@ class MocapAxisDemo:
         bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
         # until = time.time()
 
+        start_time = time.perf_counter()
         # Solve ik in this block
         q, _, q_bend = self.arm_ik.solve_ik_bvh_frame(bvh_frame, BendToBalance=True)
 
+        self.time_arms_arr.append(time.perf_counter() - start_time)
+
+        start_time = time.perf_counter()
+
         q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+
+        self.time_hand_r_arr.append(time.perf_counter() - start_time)
+
+        start_time = time.perf_counter()
+        
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+
+        self.time_hand_l_arr.append(time.perf_counter() - start_time)
 
         stamp = self.ros_node.get_clock().now().to_msg()
 
@@ -291,7 +322,7 @@ class MocapAxisDemo:
         js = Float64MultiArray()
         js.data = [float(x) for x in q_l_hand]
         self.pub_hand_l.publish(js)
-        
+
         # elapsed = time.time() - until
         # print(f"Solved and published in: {elapsed * 1000.0:.2f} ms")
 
@@ -301,3 +332,4 @@ if __name__ == "__main__":
     demo = MocapAxisDemo()
     print("Starting Mocap Axis Studio demo...")
     demo.start()
+
