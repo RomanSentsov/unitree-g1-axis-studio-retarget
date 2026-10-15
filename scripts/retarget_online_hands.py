@@ -135,11 +135,16 @@ class MocapAxisDemo:
             joint_names=RIGHT_HAND_NODES,
             assets_dir=ASSETS_DIR,
         )
+        # self.retargeter_right.optimizer.opt.set_maxtime(0.015) # in seconds
+        self.retargeter_right.optimizer.opt.set_maxeval(5) 
+        
         self.retargeter_left = HandRetargeterWrapper(
             config_path=CONFIG_PATH_LEFT,
             joint_names=LEFT_HAND_NODES,
             assets_dir=ASSETS_DIR,
         )
+        # self.retargeter_left.optimizer.opt.set_maxtime(0.015) # in seconds
+        self.retargeter_left.optimizer.opt.set_maxeval(5)
 
         self.all_hand_nodes = RIGHT_HAND_NODES + LEFT_HAND_NODES
 
