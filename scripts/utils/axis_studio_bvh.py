@@ -1,6 +1,7 @@
-from scipy.spatial.transform import Rotation as R
 import numpy as np
-from mocap_api import *
+from collections import deque
+from scipy.spatial.transform import Rotation as R
+
 
 class AxisStudioFK:
 
@@ -17,7 +18,7 @@ class AxisStudioFK:
         "LeftUpLeg": "Hips",
         "LeftLeg": "LeftUpLeg",
         "LeftFoot": "LeftLeg",
-                                    
+
         # Spine
         "Spine": "Hips",
         "Spine1": "Spine",
@@ -29,7 +30,6 @@ class AxisStudioFK:
         "Head": "Neck1",
 
         # Right arm
-
         "RightShoulder": "Spine2",
         "RightArm": "RightShoulder",
         "RightForeArm": "RightArm",
@@ -60,7 +60,6 @@ class AxisStudioFK:
         "RightHandPinky3": "RightHandPinky2",
 
         # Left arm
-
         "LeftShoulder": "Spine2",
         "LeftArm": "LeftShoulder",
         "LeftForeArm": "LeftArm",
@@ -94,8 +93,6 @@ class AxisStudioFK:
     NODE_NAMES = list(PARENT_MAP.keys())
 
     # CONSTANT AXIS -> OUR WORLD TRANSFORM
-    # +90 deg around X   +90 deg around Z
-
     AXIS_TO_TARGET = np.array([
         [0, -1, 0, 0],
         [1,  0, 0, 0],
@@ -108,36 +105,131 @@ class AxisStudioFK:
         [0, 0,  0, 1],
     ], dtype=float)
 
+    # Матрица поворота из AXIS_TO_TARGET (3x3)
+    _ROOT_ROT_MAT = AXIS_TO_TARGET[:3, :3].copy()
+    # Кватернион корня (x, y, z, w) — постоянный
+    _ROOT_QUAT = R.from_matrix(_ROOT_ROT_MAT).as_quat().astype(float)
+
+    # Топологический порядок (вычисляется один раз при загрузке класса)
+    _TOPO_ORDER = []
+
+    @classmethod
+    def _init_topo_order(cls):
+        """BFS от корня — вычисляется один раз."""
+        if cls._TOPO_ORDER:
+            return
+
+        # Находим корень
+        root = next(node for node, parent in cls.PARENT_MAP.items() if parent is None)
+
+        # Обратный словарь: parent -> [children]
+        children = {node: [] for node in cls.PARENT_MAP}
+        for child, parent in cls.PARENT_MAP.items():
+            if parent is not None:
+                children[parent].append(child)
+
+        # BFS
+        queue = deque([root])
+        order = []
+        while queue:
+            node = queue.popleft()
+            order.append(node)
+            queue.extend(children[node])
+
+        cls._TOPO_ORDER = order
+
+    # Инициализация при импорте модуля
+    _init_topo_order.__func__()
+
+    # ==================== Сырая математика (без scipy) ====================
+
     @staticmethod
-    def axis_quaternion_to_scipy(q):
-        """
-        (w, x, y, z) -> R
-        """
-        q = np.asarray(q, dtype=float).reshape(-1)
-
-        w, x, y, z = q
-
-        return R.from_quat([x, y, z, w])
-
-    @staticmethod
-    def quat_to_matrix(q):
-        """
-        R -> 3x3 matrix.
-        """
-
-        return AxisStudioFK.axis_quaternion_to_scipy(q).as_matrix()
+    def _quat_mul(q1, q2):
+        """Умножение кватернионов (x, y, z, w). Возвращает новый массив."""
+        x1, y1, z1, w1 = q1
+        x2, y2, z2, w2 = q2
+        return np.array([
+            w1*x2 + x1*w2 + y1*z2 - z1*y2,
+            w1*y2 - x1*z2 + y1*w2 + z1*x2,
+            w1*z2 + x1*y2 - y1*x2 + z1*w2,
+            w1*w2 - x1*x2 - y1*y2 - z1*z2,
+        ], dtype=float)
 
     @staticmethod
-    def matrix_to_scipy_quat(self, mat):
-        """
-        3x3 matrix -> (x,y,z,w)
-        """
+    def _rotate_vec_by_quat(v, q):
+        """Поворот вектора v кватернионом q (x,y,z,w)."""
+        ux, uy, uz = q[0], q[1], q[2]
+        s = q[3]
+        vx, vy, vz = v[0], v[1], v[2]
 
-        return R.from_matrix(mat).as_quat()
+        # u x v
+        cx = uy*vz - uz*vy
+        cy = uz*vx - ux*vz
+        cz = ux*vy - uy*vx
 
-    # FK
+        # u . v
+        dot = ux*vx + uy*vy + uz*vz
+
+        t = 2.0 * dot
+        u_sq = ux*ux + uy*uy + uz*uz
+        k = s*s - u_sq
+
+        return np.array([
+            t*ux + k*vx + 2.0*s*cx,
+            t*uy + k*vy + 2.0*s*cy,
+            t*uz + k*vz + 2.0*s*cz,
+        ], dtype=float)
+
     @staticmethod
+    def _wxyz_to_xyzw(q_wxyz):
+        """Конвертация (w, x, y, z) -> (x, y, z, w)."""
+        return np.array([q_wxyz[1], q_wxyz[2], q_wxyz[3], q_wxyz[0]], dtype=float)
+
+    # ==================== Основной метод ====================
+
+    @classmethod
+    def compute_all_fk(cls, joints_dict):
+        """
+        Вычисляет глобальные позиции всех суставов за один проход.
+
+        Args:
+            joints_dict: dict {name: joint} из Axis Studio
+
+        Returns:
+            dict: {joint_name: np.array([x, y, z])}
+        """
+        global_pos = {}
+        global_quat = {}
+
+        root_quat = cls._ROOT_QUAT
+
+        for joint_name in cls._TOPO_ORDER:
+            joint = joints_dict[joint_name]
+
+            local_pos = np.asarray(joint.get_local_position(), dtype=float)
+            local_quat = cls._wxyz_to_xyzw(joint.get_local_rotation())
+
+            parent_name = cls.PARENT_MAP[joint_name]
+
+            if parent_name is None:
+                # Корень: позиция обнуляется (relative_to_hips=True),
+                # ориентация = AXIS_TO_TARGET
+                global_pos[joint_name] = np.zeros(3, dtype=float)
+                global_quat[joint_name] = root_quat
+            else:
+                p_pos = global_pos[parent_name]
+                p_quat = global_quat[parent_name]
+
+                global_pos[joint_name] = p_pos + cls._rotate_vec_by_quat(local_pos, p_quat)
+                global_quat[joint_name] = cls._quat_mul(p_quat, local_quat)
+
+        return global_pos
+
+    # ==================== Совместимость со старым API ====================
+
+    @classmethod
     def get_global_transform(
+        cls,
         joints_dict,
         joint_name,
         parent_map=None,
@@ -145,101 +237,20 @@ class AxisStudioFK:
         _cache=None,
     ):
         """
-        Calculate global joint transform.
-
-        ## Args:
-
-            joint_dict - dict of (joint_idx, joint) from Axis Studio
-            joint_name - name of joint to find global transform of
-            parent map, relative_to_hips - do not change for unitree_g1 and axis_studio
-            _cache - if in a single time frame FK is being calculated for multiple joints, pass {} to speed up calscs.
-            CLEAN CACHE EVERY TIME FRAME
-
-        ## Returns:
-
-            position: (x, y, z)
-            orientation as quat (x, y, z, w)
+        Старый интерфейс. Работает через compute_all_fk.
+        Используйте compute_all_fk напрямую для максимальной производительности.
         """
-
-        if parent_map is None:
-            parent_map = AxisStudioFK.PARENT_MAP
-
         if _cache is None:
             _cache = {}
 
         cache_key = (joint_name, relative_to_hips)
-
         if cache_key in _cache:
             return _cache[cache_key]
 
-        joint = joints_dict[joint_name]
+        all_pos = cls.compute_all_fk(joints_dict)
 
-        # Local translation
-        local_pos = np.asarray(
-            joint.get_local_position(),
-            dtype=float
-        )
+        # Для обратной совместимости — упакуем в кэш все суставы
+        for name in cls.NODE_NAMES:
+            _cache[(name, relative_to_hips)] = (all_pos[name], None)
 
-        # Local rotation
-        local_quat = joint.get_local_rotation()
-
-        local_rot = AxisStudioFK.axis_quaternion_to_scipy(local_quat)
-
-        local_mat = np.eye(4)
-
-        local_mat[:3, :3] = local_rot.as_matrix()
-        local_mat[:3, 3] = local_pos
-
-        # Parent
-        parent_name = parent_map.get(joint_name)
-
-        if parent_name is None:
-
-            if relative_to_hips:
-
-                global_mat = AxisStudioFK.AXIS_TO_TARGET.copy()
-                # Root translation set to 0
-                global_mat[:3, 3] = 0.0
-
-            else:
-                # currently not working
-                global_mat = local_mat
-
-        else:
-        # recurrent
-            parent_pos, parent_quat = AxisStudioFK.get_global_transform(
-                joints_dict,
-                parent_name,
-                parent_map,
-                relative_to_hips,
-                _cache,
-            )
-
-            parent_rot = R.from_quat(parent_quat)
-
-            parent_mat = np.eye(4)
-            parent_mat[:3, :3] = parent_rot.as_matrix()
-            parent_mat[:3, 3] = parent_pos
-
-            global_mat = parent_mat @ local_mat
-
-        # Result
-        global_pos = global_mat[:3, 3].copy()
-
-        global_rot = R.from_matrix(
-            global_mat[:3, :3]
-        )
-
-        # scipy format:
-        # (x,y,z,w)
-        global_quat = global_rot.as_quat()
-
-        result = (
-            global_pos,
-            global_quat,
-        )
-
-        _cache[cache_key] = result
-
-        return result
-
+        return _cache[cache_key]

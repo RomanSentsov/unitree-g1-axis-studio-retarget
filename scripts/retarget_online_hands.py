@@ -255,11 +255,11 @@ class MocapAxisDemo:
             for j in joints
         }
 
-        _cache = {}
+        # _cache = {}
 
         # Retarget
-        bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
         # until = time.time()
+        bvh_frame = AxisStudioFK.compute_all_fk(joints_dict)
 
         start_time = time.perf_counter()
         # Solve ik in this block
