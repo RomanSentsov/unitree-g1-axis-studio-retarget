@@ -208,19 +208,19 @@ class MocapAxisDemo:
         self.running = False
 
             # Номера точек по x (общие для всех)
-        x = list(range(len(self.time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
+        # x = list(range(len(self.time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
 
         # Строим линии
-        plt.plot(x, self.time_arms_arr, marker='o', label='Руки')
-        plt.plot(x, self.time_hand_l_arr, marker='s', label='Левая кисть')
-        plt.plot(x, self.time_hand_r_arr, marker='^', label='Правая кисть')
+        # plt.plot(x, self.time_arms_arr, marker='o', label='Руки')
+        # plt.plot(x, self.time_hand_l_arr, marker='s', label='Левая кисть')
+        # plt.plot(x, self.time_hand_r_arr, marker='^', label='Правая кисть')
 
-        plt.xlabel('Номер точки')
-        plt.ylabel('Время ретаргетинга')
-        plt.title('Время ретаргетинга')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        # plt.xlabel('Номер точки')
+        # plt.ylabel('Время ретаргетинга')
+        # plt.title('Время ретаргетинга')
+        # plt.legend()
+        # plt.grid(True)
+        # plt.show()
 
         rclpy.shutdown()
         
@@ -232,7 +232,8 @@ class MocapAxisDemo:
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
 
-        until = time.perf_counter()
+        # until 
+        # = time.perf_counter()
         # joint data
         joints = avatar.get_joints()
 
@@ -261,25 +262,25 @@ class MocapAxisDemo:
         # Retarget
         
         bvh_frame = AxisStudioFK.compute_all_fk(joints_dict)
-        print(f'All FK solved in {time.perf_counter() - until}')
+        # print(f'All FK solved in {time.perf_counter() - until}')
 
         start_time = time.perf_counter()
         # Solve ik in this block
         q, _, q_bend = self.arm_ik.solve_ik_bvh_frame(bvh_frame, BendToBalance=True)
 
-        self.time_arms_arr.append(time.perf_counter() - start_time)
+        # self.time_arms_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
 
         q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
 
-        self.time_hand_r_arr.append(time.perf_counter() - start_time)
+        # self.time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
 
-        self.time_hand_l_arr.append(time.perf_counter() - start_time)
+        # self.time_hand_l_arr.append(time.perf_counter() - start_time)
 
         stamp = self.ros_node.get_clock().now().to_msg()
 
