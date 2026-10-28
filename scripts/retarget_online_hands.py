@@ -232,6 +232,7 @@ class MocapAxisDemo:
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
 
+        until = time.perf_counter()
         # joint data
         joints = avatar.get_joints()
 
@@ -258,8 +259,9 @@ class MocapAxisDemo:
         # _cache = {}
 
         # Retarget
-        # until = time.time()
+        
         bvh_frame = AxisStudioFK.compute_all_fk(joints_dict)
+        print(f'All FK solved in {time.perf_counter() - until}')
 
         start_time = time.perf_counter()
         # Solve ik in this block

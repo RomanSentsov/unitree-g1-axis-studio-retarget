@@ -110,13 +110,13 @@ class AxisStudioFK:
     # Кватернион корня (x, y, z, w) — постоянный
     _ROOT_QUAT = R.from_matrix(_ROOT_ROT_MAT).as_quat().astype(float)
 
-    # Топологический порядок (вычисляется один раз при загрузке класса)
-    _TOPO_ORDER = []
+    # Топологический порядок (вычисляется один раз при первом вызове)
+    _TOPO_ORDER = None
 
     @classmethod
     def _init_topo_order(cls):
         """BFS от корня — вычисляется один раз."""
-        if cls._TOPO_ORDER:
+        if cls._TOPO_ORDER is not None:
             return
 
         # Находим корень
@@ -137,9 +137,6 @@ class AxisStudioFK:
             queue.extend(children[node])
 
         cls._TOPO_ORDER = order
-
-    # Инициализация при импорте модуля
-    _init_topo_order.__func__()
 
     # ==================== Сырая математика (без scipy) ====================
 
@@ -198,6 +195,9 @@ class AxisStudioFK:
         Returns:
             dict: {joint_name: np.array([x, y, z])}
         """
+        # Lazy-инициализация топологического порядка
+        cls._init_topo_order()
+
         global_pos = {}
         global_quat = {}
 
