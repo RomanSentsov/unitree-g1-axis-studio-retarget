@@ -121,7 +121,6 @@ class Bridge(Node):
         self.g1.set_hand_r(q)
 
 
-
 def main():
     rclpy.init()
     print("ros2 inited")
