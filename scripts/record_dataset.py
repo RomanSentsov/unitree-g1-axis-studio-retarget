@@ -14,12 +14,11 @@ from std_msgs.msg import Float64MultiArray
 
 from sshkeyboard import listen_keyboard, stop_listening
 
-# --- ВСТРОЕННЫЙ ЧТЕНИЕ СОСТОЯНИЯ G1_29 ЧЕРЕЗ DDS (Только чтение, без отправки команд) ---
+# --- ВСТРОЕННЫЙ ЧТЕНИЕ СОСТОЯНИЯ G1_29 ЧЕРЕЗ DDS (Только чтение) ---
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize, ChannelSubscriber
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowState_ as hg_LowState
 
 class G1_29_JointArmIndex(IntEnum):
-    # Left arm (7 joints)
     kLeftShoulderPitch = 15
     kLeftShoulderRoll = 16
     kLeftShoulderYaw = 17
@@ -27,7 +26,6 @@ class G1_29_JointArmIndex(IntEnum):
     kLeftWristRoll = 19
     kLeftWristPitch = 20
     kLeftWristyaw = 21
-    # Right arm (7 joints)
     kRightShoulderPitch = 22
     kRightShoulderRoll = 23
     kRightShoulderYaw = 24
@@ -37,9 +35,11 @@ class G1_29_JointArmIndex(IntEnum):
     kRightWristYaw = 28
 
 class G1_29_StateReader:
-    """Минимальный класс только для чтения состояния суставов рук G1_29 через DDS."""
-    def __init__(self, domain_id: int = 0):
-        ChannelFactoryInitialize(domain_id)
+    def __init__(self, domain_id: int = 0, ifname: str = None):
+        if ifname:
+            ChannelFactoryInitialize(domain_id, ifname)
+        else:
+            ChannelFactoryInitialize(domain_id)
         
         self.latest_q = np.zeros(14)
         self.latest_dq = np.zeros(14)
@@ -52,7 +52,6 @@ class G1_29_StateReader:
         self.thread = threading.Thread(target=self._read_loop, daemon=True)
         self.thread.start()
 
-        # Ждем получения первого пакета данных
         timeout = 5.0
         start = time.time()
         while not self.sub_ready and (time.time() - start) < timeout:
@@ -80,11 +79,8 @@ class G1_29_StateReader:
             return self.latest_dq.copy()
 # -----------------------------------------------------------------------------------------
 
-# Добавьте пути к вашим модулям (адаптируйте при необходимости)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(os.path.join(current_dir, "teleimager"))
-
-from teleimager.image_client import ImageClient
+# ИМПОРТ НОВОГО API TELEIMAGER
+from teleimager.client import TeleImageClient
 from utils.episode_writer import EpisodeWriter
 
 # --- Глобальные переменные ---
@@ -99,7 +95,6 @@ def on_press(key):
     elif key == 'q':
         STOP = True
 
-# Имена суставов для парсинга ROS-команд (actions) из топика /joint_states
 ARM_JOINTS_LEFT = [
     "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint",
     "left_elbow_joint", "left_wrist_roll_joint", "left_wrist_pitch_joint", "left_wrist_yaw_joint",
@@ -114,20 +109,18 @@ class DemoRecorderNode(Node):
         super().__init__('demo_recorder_node')
         self.args = args
         
-        # 1. Инициализация чтения состояния робота через DDS (G1_29)
-        # domain_id=0 для реального робота, 1 для симуляции Isaac Sim
+        # 1. Инициализация чтения состояния робота через DDS
         domain_id = 1 if args.sim else 0
-        self.get_logger().info(f"Initializing DDS State Reader (domain_id={domain_id})...")
-        self.arm_state_reader = G1_29_StateReader(domain_id=domain_id)
+        self.get_logger().info(f"Initializing DDS State Reader (domain_id={domain_id}, ifname={args.network_interface})...")
+        self.arm_state_reader = G1_29_StateReader(domain_id=domain_id, ifname=args.network_interface)
         self.get_logger().info("✅ Unitree DDS State Reader initialized.")
 
         # 2. Подписка на КОМАНДЫ (actions) из ROS 2
-        # Как вы указали, /joint_states содержит команды, которые шлются на робота
         self.latest_action_js: Optional[JointState] = None
         self.action_sub = self.create_subscription(
             JointState, '/joint_states', self._action_cb, 10)
         
-        # 3. Подписки на кисти (команды/состояние кистей из ROS 2)
+        # 3. Подписки на кисти
         self.latest_hand_l: Optional[Float64MultiArray] = None
         self.latest_hand_r: Optional[Float64MultiArray] = None
         
@@ -136,10 +129,25 @@ class DemoRecorderNode(Node):
         self.hand_r_sub = self.create_subscription(
             Float64MultiArray, '/hand_r', self._hand_r_cb, 10)
 
-        # 4. Клиент изображений
-        self.get_logger().info(f"Connecting to Image Server at {args.img_server_ip}...")
-        self.img_client = ImageClient(host=args.img_server_ip, request_bgr=True)
-        self.cam_config = self.img_client.get_cam_config()
+        # 4. Клиент изображений (НОВОЕ API)
+        self.get_logger().info(f"Scanning Image Server at {args.img_server_ip}...")
+        self.camera_config, from_server = TeleImageClient.scan(server_host=args.img_server_ip)
+        
+        if not from_server:
+            self.get_logger().error("Не удалось получить конфигурацию камер с сервера. Проверьте IP и запущен ли teleimager-server.")
+            raise RuntimeError("Camera config fetch failed")
+
+        self.camera_clients = {}
+        for topic, cfg in self.camera_config.items():
+            if cfg.get('enable_zmq'):
+                self.get_logger().info(f"Initializing ZMQ client for camera: {topic} (port {cfg['zmq_port']})")
+                # ВАЖНО: topic должен быть первым позиционным аргументом!
+                self.camera_clients[topic] = TeleImageClient(
+                    topic,
+                    server_host=args.img_server_ip,
+                    zmq_port=cfg['zmq_port'],
+                    request_bgr=True
+                )
 
         # 5. Инициализация рекордера
         task_path = os.path.join(args.task_dir, args.task_name)
@@ -172,7 +180,6 @@ class DemoRecorderNode(Node):
         self.latest_hand_r = msg
 
     def _extract_arm_data_from_ros(self, msg: JointState, side: str) -> tuple[List[float], List[float], List[float]]:
-        """Извлекает qpos, qvel, effort из ROS-сообщения команд по именам суставов."""
         if msg is None or not msg.name:
             return [], [], []
         
@@ -193,9 +200,6 @@ class DemoRecorderNode(Node):
         return qpos, qvel, eff
 
     def _build_data_dict(self):
-        """Формирует словари states (из DDS) и actions (из ROS 2)."""
-        
-        # --- STATE: Читаем реальное состояние робота через DDS ---
         try:
             current_lr_arm_q = self.arm_state_reader.get_current_dual_arm_q()
             current_lr_arm_dq = self.arm_state_reader.get_current_dual_arm_dq()
@@ -209,7 +213,6 @@ class DemoRecorderNode(Node):
             self.get_logger().warning(f"Failed to read DDS state: {e}")
             return None, None
 
-        # Кисти (берем из ROS, так как они публикуются туда)
         hand_l_qpos = list(self.latest_hand_l.data) if self.latest_hand_l else []
         hand_r_qpos = list(self.latest_hand_r.data) if self.latest_hand_r else []
 
@@ -221,7 +224,6 @@ class DemoRecorderNode(Node):
             "body": {"qpos": []} 
         }
 
-        # --- ACTION: Читаем команды из ROS 2 топика /joint_states ---
         if self.latest_action_js is None:
             return None, None
 
@@ -262,34 +264,39 @@ class DemoRecorderNode(Node):
                         self.get_logger().info("💾 EPISODE SAVED")
 
                 if RECORD_RUNNING:
-                    head_img = self.img_client.get_head_frame()
-                    left_wrist_img = self.img_client.get_left_wrist_frame() if self.cam_config.get('left_wrist_camera', {}).get('enable_zmq') else None
-                    right_wrist_img = self.img_client.get_right_wrist_frame() if self.cam_config.get('right_wrist_camera', {}).get('enable_zmq') else None
-
                     states, actions = self._build_data_dict()
                     if states is None or actions is None:
-                        continue # Пропускаем кадр, пока не пришли данные DDS или ROS
+                        continue
 
                     colors = {}
                     depths = {}
-                    if self.cam_config['head_camera'].get('binocular'):
-                        if head_img and head_img.bgr is not None:
-                            w = self.cam_config['head_camera']['image_shape'][1] // 2
-                            colors["color_0"] = head_img.bgr[:, :w]
-                            colors["color_1"] = head_img.bgr[:, w:]
-                    else:
-                        if head_img and head_img.bgr is not None:
-                            colors["color_0"] = head_img.bgr
+                    
+                    # Обработка головной камеры
+                    if 'head_camera' in self.camera_clients:
+                        head_frame = self.camera_clients['head_camera'].get_frame()
+                        if head_frame.bgr is not None:
+                            if self.camera_config['head_camera'].get('binocular'):
+                                w = self.camera_config['head_camera']['image_shape'][1] // 2
+                                colors["color_0"] = head_frame.bgr[:, :w]
+                                colors["color_1"] = head_frame.bgr[:, w:]
+                            else:
+                                colors["color_0"] = head_frame.bgr
 
-                    if left_wrist_img and left_wrist_img.bgr is not None:
-                        colors["color_2" if self.cam_config['head_camera'].get('binocular') else "color_1"] = left_wrist_img.bgr
-                    if right_wrist_img and right_wrist_img.bgr is not None:
-                        colors["color_3" if self.cam_config['head_camera'].get('binocular') else "color_2"] = right_wrist_img.bgr
+                    # Обработка камер на запястьях (динамическое назначение индексов)
+                    color_idx = 2 if self.camera_config.get('head_camera', {}).get('binocular') else 1
+                    
+                    for cam_name in ['left_wrist_camera', 'right_wrist_camera']:
+                        if cam_name in self.camera_clients:
+                            frame = self.camera_clients[cam_name].get_frame()
+                            if frame.bgr is not None:
+                                colors[f"color_{color_idx}"] = frame.bgr
+                                color_idx += 1
 
                     self.recorder.add_item(colors=colors, depths=depths, states=states, actions=actions)
 
                 time_elapsed = time.time() - start_time
                 time.sleep(max(0.0, (1.0 / self.args.frequency) - time_elapsed))
+                
         except KeyboardInterrupt:
             self.get_logger().info("⛔ KeyboardInterrupt received.")
         finally:
@@ -301,7 +308,11 @@ class DemoRecorderNode(Node):
         if RECORD_RUNNING:
             self.recorder.save_episode()
         self.recorder.close()
-        self.img_client.close()
+        
+        # Закрытие всех клиентов камер (НОВОЕ API)
+        for topic, client in self.camera_clients.items():
+            client.close()
+            
         stop_listening()
         self.kb_thread.join(timeout=1.0)
         self.get_logger().info("✅ Cleanup completed.")
@@ -310,13 +321,14 @@ class DemoRecorderNode(Node):
 def main():
     parser = argparse.ArgumentParser(description="ROS 2 + DDS Teleoperation Demo Recorder")
     parser.add_argument('--frequency', type=float, default=30.0, help='Recording frequency (Hz)')
-    parser.add_argument('--img-server-ip', type=str, default='127.0.0.1', help='IP of teleimager server')
+    parser.add_argument('--img-server-ip', type=str, default='192.168.123.164', help='IP of teleimager server')
     parser.add_argument('--task-dir', type=str, default='./data/', help='Path to save data')
     parser.add_argument('--task-name', type=str, default='demo_task', help='Task folder name')
     parser.add_argument('--task-goal', type=str, default='record demonstration', help='Task goal description')
     parser.add_argument('--task-desc', type=str, default='teleop recording', help='Task description')
     parser.add_argument('--task-steps', type=str, default='step1: approach; step2: grasp;', help='Task steps')
     parser.add_argument('--sim', action='store_true', help='Enable simulation mode (DDS domain_id=1)')
+    parser.add_argument('--network-interface', type=str, default='enxc84d4427fee8', help='Network interface for DDS (e.g., eth0, wlan0)')
     
     args = parser.parse_args()
     rclpy.init()
