@@ -69,7 +69,7 @@ G1_FULL_JOINT_NAMES = [
         "L_pinky_DIP_joint"
     ]
 
-FRAMERATE = 30
+FRAMERATE = 10
 FILEPATH = "recs/bvh_recs/bvh_misha_no_xyz_chr01_MAYA.bvh"
 # FILEPATH = "recs/bvh_recs/Aleksandr_recs/rec1_chr01_MAYA.bvh"
 FILEPATH_EX = "recs/bvh_recs/example1.bvh"

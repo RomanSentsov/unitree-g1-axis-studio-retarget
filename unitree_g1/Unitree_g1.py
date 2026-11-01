@@ -7,6 +7,7 @@ from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
 
+
 class G1JointIndex:
     # Left leg
     LeftHipPitch = 0
@@ -82,33 +83,33 @@ WAIST_JOINTS = [
 ]
 
 
-# Inspire hand
-
-from RH56DFTP.RH56DFTP_TCP import RH56DFTP_TCP
-from Register.RegisterKey.ftp_registers_keys import (
-    POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5
-)
-
-# Порядок пальцев Inspire (совпадает с примером):
-# [pinky, ring, middle, index, thumb_bend, thumb_rot]
-HAND_POS_REGISTERS = [POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5]
+# ---------------- Inspire hand (только real) ----------------
+# Импорт вынесен внутрь __init__, чтобы в sim-окружении
+# не требовались пакеты RH56DFTP / Register.
 
 HAND_MIN = 0
-HAND_MAX = 1800     # полный ход по примеру
+HAND_MAX = 1800
 
 
 class InspireHandTCP:
     """Обёртка над RH56DFTP_TCP для одной кисти."""
 
     def __init__(self, host: str, port: int = 6000):
+        from RH56DFTP.RH56DFTP_TCP import RH56DFTP_TCP
+        from Register.RegisterKey.ftp_registers_keys import (
+            POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5
+        )
+        # Порядок пальцев Inspire:
+        # [pinky, ring, middle, index, thumb_bend, thumb_rot]
+        self._regs = [POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5]
         self.client = RH56DFTP_TCP(host=host, port=port)
 
     def set_positions(self, positions_6):
-        """positions_6: список из 6 значений 0..1800 в порядке
+        """positions_6: 6 значений 0..1800 в порядке
         [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
         if len(positions_6) != 6:
             raise ValueError("нужно ровно 6 значений")
-        for reg, val in zip(HAND_POS_REGISTERS, positions_6):
+        for reg, val in zip(self._regs, positions_6):
             v = int(max(HAND_MIN, min(HAND_MAX, val)))
             self.client.set(reg, v)
 
@@ -122,12 +123,65 @@ class InspireHandTCP:
             pass
 
 
+# ---------------- Заглушки кистей для симулятора ----------------
+
+class SimHandStub:
+    """Ничего не делает. TODO: заменить на DDS-интерфейс Inspire / написать интерфейс в симе."""
+
+    def __init__(self, side: str):
+        self.side = side
+
+    def set_positions(self, positions_6):
+        # TODO: отправить команду гриппера в симулятор
+        pass
+
+    def open(self):
+        # TODO
+        pass
+
+    def close(self):
+        # TODO
+        pass
+
+
 class UnitreeG1:
-    def __init__(self, ifname="enxc84d4427fee8", control_dt=0.02):
-        if ifname is not None:
-            ChannelFactoryInitialize(0, ifname)
+    """
+    real: UnitreeG1(ifname="enxc84d4427fee8")
+          -> ChannelFactoryInitialize(0, ifname), топик rt/arm_sdk, кисти Inspire по TCP
+
+    sim:  UnitreeG1(sim=True)
+          -> ChannelFactoryInitialize(1), топик rt/lowcmd, кисти — заглушки,
+             enable/disable arm_sdk не используется
+    """
+
+    def __init__(
+        self,
+        ifname="enxc84d4427fee8",
+        control_dt=0.02,
+        sim=False,
+        dds_channel=None,
+        cmd_topic=None,
+        state_topic="rt/lowstate",
+        state_timeout=None,
+    ):
+        self.sim = sim
+        self.control_dt = control_dt
+
+        # --- DDS ---
+        if sim:
+            channel = 1 if dds_channel is None else dds_channel
+            ChannelFactoryInitialize(channel)
+            topic = cmd_topic or "rt/lowcmd"
         else:
-            ChannelFactoryInitialize(0)
+            channel = 0 if dds_channel is None else dds_channel
+            if ifname is not None:
+                ChannelFactoryInitialize(channel, ifname)
+            else:
+                ChannelFactoryInitialize(channel)
+            topic = cmd_topic or "rt/arm_sdk"
+
+        self.cmd_topic = topic
+        print(f"[UnitreeG1] mode={'SIM' if sim else 'REAL'}, channel={channel}, cmd_topic={topic}")
 
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.low_state = None
@@ -136,27 +190,29 @@ class UnitreeG1:
 
         self.kp = 80.0
         self.kd = 1.5
-        self.control_dt = control_dt
+        self.waist_kp = 350.0
+        self.waist_kd = 2.5
 
-        self.publisher = ChannelPublisher("rt/arm_sdk", LowCmd_)
+        self.publisher = ChannelPublisher(topic, LowCmd_)
         self.publisher.Init()
 
-        self.subscriber = ChannelSubscriber("rt/lowstate", LowState_)
+        self.subscriber = ChannelSubscriber(state_topic, LowState_)
         self.subscriber.Init(self._low_state_handler, 10)
 
-        # Hands:
-        self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
-        self.hand_l = InspireHandTCP(host="192.168.123.210", port=6000) 
+        # --- Кисти ---
+        if sim:
+            self.hand_r = SimHandStub("right")
+            self.hand_l = SimHandStub("left")
+        else:
+            self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
+            self.hand_l = InspireHandTCP(host="192.168.123.210", port=6000)
 
-        #
-
-
-        # Целевые позиции — все три группы устроены одинаково
+        # --- Целевые позиции ---
         self.target_pos_l = None       # 7 значений
         self.target_pos_r = None       # 7 значений
         self.target_pos_waist = None   # 3 значения
 
-        # Плавное включение/выключение arm_sdk
+        # --- Плавное включение/выключение arm_sdk (только real) ---
         self.enable_current = 0.0
         self.enable_target = 0.0
         self.enable_start_time = None
@@ -166,8 +222,17 @@ class UnitreeG1:
         self.thread = None
         self.running = False
 
+        # --- Ждём первое состояние ---
+        t0 = time.time()
         while not self.first_update:
+            if state_timeout is not None and time.time() - t0 > state_timeout:
+                raise TimeoutError(
+                    f"Не получен {state_topic} за {state_timeout} c "
+                    f"(mode={'SIM' if sim else 'REAL'}, channel={channel})"
+                )
             time.sleep(0.1)
+
+        print("[UnitreeG1] received a low_state: robot connected")
 
         # Стартовые цели = текущее положение
         self.target_pos_l = [self.low_state.motor_state[j].q for j in LEFT_ARM_JOINTS]
@@ -191,22 +256,24 @@ class UnitreeG1:
         if not self.first_update:
             return
 
-        # Плавное включение/выключение arm_sdk
-        if self.enable_current != self.enable_target:
-            if self.enable_start_time is None:
-                self.enable_start_time = time.time()
-                self.enable_start_val = self.enable_current
-            elapsed = time.time() - self.enable_start_time
-            ratio = min(elapsed / self.enable_duration, 1.0)
-            self.enable_current = self.enable_start_val + (self.enable_target - self.enable_start_val) * ratio
-            if ratio >= 1.0:
-                self.enable_start_time = None
-        self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = self.enable_current
+        if not self.sim:
+            # Плавное включение/выключение arm_sdk
+            if self.enable_current != self.enable_target:
+                if self.enable_start_time is None:
+                    self.enable_start_time = time.time()
+                    self.enable_start_val = self.enable_current
+                elapsed = time.time() - self.enable_start_time
+                ratio = min(elapsed / self.enable_duration, 1.0)
+                self.enable_current = self.enable_start_val + \
+                    (self.enable_target - self.enable_start_val) * ratio
+                if ratio >= 1.0:
+                    self.enable_start_time = None
+            self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = self.enable_current
 
-        # Руки и торс — одинаково
+        # Руки и торс
         self._fill(self.target_pos_l, LEFT_ARM_JOINTS, self.kp, self.kd)
         self._fill(self.target_pos_r, RIGHT_ARM_JOINTS, self.kp, self.kd)
-        self._fill(self.target_pos_waist, WAIST_JOINTS, 350.0, 2.5)
+        self._fill(self.target_pos_waist, WAIST_JOINTS, self.waist_kp, self.waist_kd)
 
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.publisher.Write(self.low_cmd)
@@ -234,28 +301,38 @@ class UnitreeG1:
         self.target_pos_r = list(q)
 
     def set_waist(self, q):
-        '''
-        Args: (waist_yaw(== rot around z), waist_roll, waist_pitch)
-        '''
+        """Args: (waist_yaw (rot around z), waist_roll, waist_pitch)"""
         if len(q) != 3:
             raise ValueError("set_waist: нужно 3 значения")
         self.target_pos_waist = list(q)
 
     def enable_arm_sdk(self, duration=2.0):
+        if self.sim:
+            return  # в симуляторе не требуется
         self.enable_target = 1.0
         self.enable_duration = duration
         self.enable_start_time = None
         self.enable_start_val = self.enable_current
 
     def disable_arm_sdk(self, duration=2.0):
+        if self.sim:
+            return  # в симуляторе не требуется
         self.enable_target = 0.0
         self.enable_duration = duration
         self.enable_start_time = None
         self.enable_start_val = self.enable_current
 
+    def open_hands(self):
+        try:
+            self.hand_r.open()
+            self.hand_l.open()
+        except Exception:
+            pass
+
     def shutdown(self):
         if self.thread is not None:
             self.thread.Stop()
+            self.thread = None
             self.running = False
         try:
             self.hand_r.close()
@@ -263,16 +340,18 @@ class UnitreeG1:
         except Exception:
             pass
 
-    # Inpire hand API
+    # ---- Inspire / Sim hand API ----
 
     def set_hand_r(self, angles_r):
-        """angles_r: 6 значений 0..1800 в порядке
-        [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
+        """6 значений 0..1800: [pinky, ring, middle, index, thumb_bend, thumb_rot].
+        В sim — заглушка."""
         self.hand_r.set_positions(angles_r)
-
 
     def set_hand_l(self, angles_l):
         self.hand_l.set_positions(angles_l)
 
     def __del__(self):
-        self.shutdown()
+        try:
+            self.shutdown()
+        except Exception:
+            pass
