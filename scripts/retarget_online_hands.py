@@ -4,6 +4,7 @@ import time
 import array
 
 import numpy as np
+import matplotlib.pyplot as plt
 # for publishing hand and joint states
 import rclpy
 from rclpy.node import Node
@@ -17,6 +18,8 @@ from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
 
 from mocap_api import *
 import logging
+
+from threading import Thread
 
 logging.getLogger("yourdfpy").setLevel(logging.ERROR)
 
@@ -116,10 +119,15 @@ class MocapAxisDemo:
         self.app = None
         self.running = False
 
+        self.current_evt = None
         self.prev_posture_time_ms = None
-
+        self.freq = 50
         # init arm ik (retargeter)
         self.arm_ik = G1_29_ArmIK(False)
+
+        self.time_arms_arr = []
+        self.time_hand_l_arr = []
+        self.time_hand_r_arr = []
 
         # hand retarget
         self.retargeter_right = HandRetargeterWrapper(
@@ -127,11 +135,16 @@ class MocapAxisDemo:
             joint_names=RIGHT_HAND_NODES,
             assets_dir=ASSETS_DIR,
         )
+        # self.retargeter_right.optimizer.opt.set_maxtime(0.015) # in seconds
+        self.retargeter_right.optimizer.opt.set_maxeval(5) 
+        
         self.retargeter_left = HandRetargeterWrapper(
             config_path=CONFIG_PATH_LEFT,
             joint_names=LEFT_HAND_NODES,
             assets_dir=ASSETS_DIR,
         )
+        # self.retargeter_left.optimizer.opt.set_maxtime(0.015) # in seconds
+        self.retargeter_left.optimizer.opt.set_maxeval(5)
 
         self.all_hand_nodes = RIGHT_HAND_NODES + LEFT_HAND_NODES
 
@@ -161,21 +174,53 @@ class MocapAxisDemo:
         )
         self.running = True
 
+        # Separate thread for retargeting, pillung bvh from buffer
+        self.retarget_thread = Thread(target=self.start_retarget, daemon=True)
+        self.retarget_thread.start()
+
         try:
             while self.running:
                 evts = self.app.poll_next_event()
                 for evt in evts:
-
                     if evt.event_type == MCPEventType.AvatarUpdated:
-                        self._handle_avatar_data(evt)
+                        self.current_evt = evt
         except KeyboardInterrupt:
             print("Program interrupted by user")
         finally:
             self.stop()
 
+    def start_retarget(self):
+
+        while self.running:
+            start_time = time.perf_counter()
+            # retarget
+            if self.current_evt != None:
+                self._handle_avatar_data(self.current_evt)
+
+            elapsed = time.perf_counter() - start_time
+
+            print(f"frame solved in {elapsed}")
+            if(elapsed < 1/self.freq):
+                time.sleep(1/self.freq - elapsed)
+
 
     def stop(self):
         self.running = False
+
+            # Номера точек по x (общие для всех)
+        # x = list(range(len(self.time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
+
+        # Строим линии
+        # plt.plot(x, self.time_arms_arr, marker='o', label='Руки')
+        # plt.plot(x, self.time_hand_l_arr, marker='s', label='Левая кисть')
+        # plt.plot(x, self.time_hand_r_arr, marker='^', label='Правая кисть')
+
+        # plt.xlabel('Номер точки')
+        # plt.ylabel('Время ретаргетинга')
+        # plt.title('Время ретаргетинга')
+        # plt.legend()
+        # plt.grid(True)
+        # plt.show()
 
         rclpy.shutdown()
         
@@ -184,24 +229,27 @@ class MocapAxisDemo:
             print("Mocap application closed")
 
     def _handle_avatar_data(self, evt):
-
         # event data
         avatar = MCPAvatar(evt.event_data.avatar_handle)
 
+        # until 
+        # = time.perf_counter()
         # joint data
         joints = avatar.get_joints()
 
         # hour, minute, second, millisecond = avatar.get_avatar_posture_time()
         # current_time_ms = ((hour * 3600 + minute * 60 + second) * 1000 + millisecond)
-        current_time_ms = time.time()
-        if self.prev_posture_time_ms is not None:
-            delta_ms = current_time_ms - self.prev_posture_time_ms
-            if (delta_ms < 0.02):
-                return
-            print(f"=====Frame interval: {delta_ms} ms")
-        self.prev_posture_time_ms = current_time_ms
 
-        current_time_ms = time.time() * 1000.0
+        # Prev frame sparcer
+        # current_time_ms = time.time()
+        # if self.prev_posture_time_ms is not None:
+        #     delta_ms = current_time_ms - self.prev_posture_time_ms
+        #     if (delta_ms < 0.02):
+        #         return
+        #     print(f"=====Frame interval: {delta_ms} ms")
+        # self.prev_posture_time_ms = current_time_ms
+
+        # current_time_ms = time.time() * 1000.0
 
         # joint names
         joints_dict = {
@@ -209,21 +257,32 @@ class MocapAxisDemo:
             for j in joints
         }
 
-        _cache = {}
+        # _cache = {}
 
         # Retarget
-        bvh_frame = {name: AxisStudioFK.get_global_transform(joints_dict, name, relative_to_hips=True, _cache=_cache)[0] for name in AxisStudioFK.NODE_NAMES}
-        until = time.time()
+        
+        bvh_frame = AxisStudioFK.compute_all_fk(joints_dict)
+        # print(f'All FK solved in {time.perf_counter() - until}')
 
+        start_time = time.perf_counter()
         # Solve ik in this block
-        q_bend = 0.
         q, _, q_bend = self.arm_ik.solve_ik_bvh_frame(bvh_frame, BendToBalance=True)
 
+        # self.time_arms_arr.append(time.perf_counter() - start_time)
+
+        start_time = time.perf_counter()
+
         q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+
+        # self.time_hand_r_arr.append(time.perf_counter() - start_time)
+
+        start_time = time.perf_counter()
+        
         q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
 
+        # self.time_hand_l_arr.append(time.perf_counter() - start_time)
+
         stamp = self.ros_node.get_clock().now().to_msg()
-        # print(q)
 
         # publish arm and waist joints
         js = JointState()
@@ -271,9 +330,9 @@ class MocapAxisDemo:
         js = Float64MultiArray()
         js.data = [float(x) for x in q_l_hand]
         self.pub_hand_l.publish(js)
-        
-        elapsed = time.time() - until
-        print(f"Solved and published in: {elapsed * 1000.0:.2f} ms")
+
+        # elapsed = time.time() - until
+        # print(f"Solved and published in: {elapsed * 1000.0:.2f} ms")
 
 
 if __name__ == "__main__":
@@ -281,3 +340,4 @@ if __name__ == "__main__":
     demo = MocapAxisDemo()
     print("Starting Mocap Axis Studio demo...")
     demo.start()
+
