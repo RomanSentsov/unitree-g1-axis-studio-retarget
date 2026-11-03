@@ -2,3 +2,5 @@
 __pycache__/
 rh56dftp.log
 cache/
+my_datasets/
+data/
