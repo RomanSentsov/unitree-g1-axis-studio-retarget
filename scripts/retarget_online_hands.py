@@ -192,12 +192,12 @@ class MocapAxisDemo:
     def start_retarget(self):
 
         while self.running:
-            start_time = time.time()
+            start_time = time.perf_counter()
             # retarget
             if self.current_evt != None:
                 self._handle_avatar_data(self.current_evt)
 
-            elapsed = time.time() - start_time
+            elapsed = time.perf_counter() - start_time
 
             print(f"frame solved in {elapsed}")
             if(elapsed < 1/self.freq):
