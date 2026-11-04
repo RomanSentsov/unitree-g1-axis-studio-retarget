@@ -14,7 +14,7 @@ from std_msgs.msg import Float64MultiArray
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
+from hands_retargeting.retargeting_wrapper import InspireHandRetargeterWrapper
 
 from mocap_api import *
 import logging
@@ -130,7 +130,7 @@ class MocapAxisDemo:
         self.time_hand_r_arr = []
 
         # hand retarget
-        self.retargeter_right = HandRetargeterWrapper(
+        self.retargeter_right = InspireHandRetargeterWrapper(
             config_path=CONFIG_PATH_RIGHT,
             joint_names=RIGHT_HAND_NODES,
             assets_dir=ASSETS_DIR,
@@ -138,7 +138,7 @@ class MocapAxisDemo:
         # self.retargeter_right.optimizer.opt.set_maxtime(0.015) # in seconds
         self.retargeter_right.optimizer.opt.set_maxeval(5) 
         
-        self.retargeter_left = HandRetargeterWrapper(
+        self.retargeter_left = InspireHandRetargeterWrapper(
             config_path=CONFIG_PATH_LEFT,
             joint_names=LEFT_HAND_NODES,
             assets_dir=ASSETS_DIR,
@@ -272,13 +272,13 @@ class MocapAxisDemo:
 
         start_time = time.perf_counter()
 
-        q_r_hand = self.retargeter_right.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+        q_r_hand = self.retargeter_right.retarget_to_registers(bvh_frame)
 
         # self.time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
-        q_l_hand = self.retargeter_left.retarget(bvh_frame)[[2, 6, 4, 0, 9, 8]]
+        q_l_hand = self.retargeter_left.retarget_to_registers(bvh_frame)
 
         # self.time_hand_l_arr.append(time.perf_counter() - start_time)
 

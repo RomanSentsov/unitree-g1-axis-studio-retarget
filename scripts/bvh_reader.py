@@ -17,7 +17,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 
-from hands_retargeting.retargeting_wrapper import HandRetargeterWrapper
+from hands_retargeting.retargeting_wrapper import InspireHandRetargeterWrapper
 
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -117,7 +117,7 @@ FILEPATH_EX = "recs/bvh_recs/example1.bvh"
 
 # hands
 
-retargeter_right = HandRetargeterWrapper(
+retargeter_right = InspireHandRetargeterWrapper(
             config_path=CONFIG_PATH_RIGHT,
             joint_names=RIGHT_HAND_NODES,
             assets_dir=ASSETS_DIR,
@@ -125,7 +125,7 @@ retargeter_right = HandRetargeterWrapper(
         # .retargeter_right.optimizer.opt.set_maxtime(0.015) # in seconds
 retargeter_right.optimizer.opt.set_maxeval(5) 
         
-retargeter_left = HandRetargeterWrapper(
+retargeter_left = InspireHandRetargeterWrapper(
             config_path=CONFIG_PATH_LEFT,
             joint_names=LEFT_HAND_NODES,
             assets_dir=ASSETS_DIR,
@@ -188,8 +188,8 @@ while cond:
         q_bend = 0
         # q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
-        q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
-        q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
+        q_l_hand = retargeter_left.retarget_to_registers(bvh_dict)
+        q_r_hand = retargeter_right.retarget_to_registers(bvh_dict)
 
         start_time = time.perf_counter()
         # Solve ik in this block
@@ -199,13 +199,13 @@ while cond:
 
         start_time = time.perf_counter()
 
-        q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
+        q_r_hand = retargeter_right.retarget_to_registers(bvh_dict)
 
         # time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
-        q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
+        q_l_hand = retargeter_left.retarget_to_registers(bvh_dict)
 
         # time_hand_l_arr.append(time.perf_counter() - start_time)
 

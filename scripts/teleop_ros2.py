@@ -113,11 +113,11 @@ class Bridge(Node):
         self.g1.set_waist(vec(WAIST_NAMES))
 
     def on_msg_l_hand(self, msg):
-        q = np.array(msg.data) * 1800 * 4 / 3.14
+        q = msg.data
         self.g1.set_hand_l(q)
 
     def on_msg_r_hand(self, msg):
-        q = np.array(msg.data) * 1800 * 4 / 3.14
+        q = msg.data
         self.g1.set_hand_r(q)
 
 
