@@ -128,19 +128,22 @@ class G1_29_ArmIK:
         # SE3 poses of ee_s
         self.cTf_l = casadi.SX.sym("tf_l", 4, 4)
         self.cTf_r = casadi.SX.sym("tf_r", 4, 4)
-
+        # and elbows
         self.cTf_elbow_l = casadi.SX.sym("tf_elbow_l", 4, 4)
         self.cTf_elbow_r = casadi.SX.sym("tf_elbow_r", 4, 4)
+        # and body (for orientation)
+        self.cTf_torso = casadi.SX.sym("tf_torso", 4, 4)
 
         cpin.framesForwardKinematics(self.cmodel, self.cdata, self.cq)
 
-        # TODO: add error funcs for elbows and other frames
         # Get the hand joint ID and define the error function
         self.L_hand_id = self.reduced_robot.model.getFrameId("L_ee")
         self.R_hand_id = self.reduced_robot.model.getFrameId("R_ee")
 
         self.R_elbow_id = self.reduced_robot.model.getFrameId("right_elbow_joint")
         self.L_elbow_id = self.reduced_robot.model.getFrameId("left_elbow_joint")
+
+        self.torso_id = self.reduced_robot.model.getFrameId("torso_link")
 
         # --------------- Cost func definitions
         # Hand pos
@@ -174,8 +177,15 @@ class G1_29_ArmIK:
                 )
             ],
         )
-
-        # TODO: insert trans error elbows in cost
+        self.rotational_error_torso = casadi.Function(
+            "rotational_error_torso",
+            [self.cq, self.cTf_torso],
+            [
+                casadi.vertcat(
+                    cpin.log3(self.cdata.oMf[self.torso_id].rotation @ self.cTf_torso[:3,:3].T)
+                )
+            ],
+        )
 
         # Defining the optimization problem
         self.opti = casadi.Opti()
@@ -186,10 +196,14 @@ class G1_29_ArmIK:
         # elbow
         self.param_tf_elbow_l = self.opti.parameter(4, 4)
         self.param_tf_elbow_r = self.opti.parameter(4, 4)
-        self.translational_cost_elbow = casadi.sumsqr(self.translational_error_elbow(self.var_q, self.param_tf_elbow_l, self.param_tf_elbow_r))
+        # torso
+        self.param_tf_torso = self.opti.parameter(4, 4)
 
+        self.translational_cost_elbow = casadi.sumsqr(self.translational_error_elbow(self.var_q, self.param_tf_elbow_l, self.param_tf_elbow_r))
+        self.rotation_cost_torso = casadi.sumsqr(self.rotational_error_torso(self.var_q, self.param_tf_torso))
         self.translational_cost = casadi.sumsqr(self.translational_error(self.var_q, self.param_tf_l, self.param_tf_r))
         self.rotation_cost = casadi.sumsqr(self.rotational_error(self.var_q, self.param_tf_l, self.param_tf_r))
+
         self.regularization_cost = casadi.sumsqr(self.var_q)
         self.smooth_cost = casadi.sumsqr(self.var_q - self.var_q_last)
 
@@ -200,8 +214,8 @@ class G1_29_ArmIK:
             self.reduced_robot.model.upperPositionLimit)
         )
 
-        # ADDED ELBOW TRANSITIONAL COST
-        self.opti.minimize(50 * self.translational_cost + 5 * self.translational_cost_elbow + self.rotation_cost + 0.1 * self.regularization_cost + 0.1 * self.smooth_cost)
+        # Cost func
+        self.opti.minimize(50 * self.translational_cost + 5 * self.translational_cost_elbow + 5 * self.rotation_cost_torso + self.rotation_cost + 0.1 * self.regularization_cost + 0.1 * self.smooth_cost)
 
         opts = {
             # CasADi-level options
@@ -236,7 +250,7 @@ class G1_29_ArmIK:
             self.vis.display(pin.neutral(self.reduced_robot.model))
 
             # Enable the display of end effector target frames with short axis lengths and greater width.
-            frame_viz_names = ['L_ee_target', 'R_ee_target', "L_elbow_target", "R_elbow_target"]
+            frame_viz_names = ['L_ee_target', 'R_ee_target', "L_elbow_target", "R_elbow_target", "torso_target"]
             FRAME_AXIS_POSITIONS = (
                 np.array([[0, 0, 0], [1, 0, 0],
                           [0, 0, 0], [0, 1, 0],
@@ -299,7 +313,7 @@ class G1_29_ArmIK:
     def scale_bend(self, x, a = -5., b=0.):
         return a*x + b
 
-    def solve_ik(self, left_wrist, right_wrist, left_elbow, right_elbow, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None, BendToBalance = False):
+    def solve_ik(self, left_wrist, right_wrist, left_elbow, right_elbow, torso, current_lr_arm_motor_q = None, current_lr_arm_motor_dq = None, BendToBalance = False):
         if current_lr_arm_motor_q is not None:
             self.init_data = current_lr_arm_motor_q
         self.opti.set_initial(self.var_q, self.init_data)
@@ -313,12 +327,16 @@ class G1_29_ArmIK:
             self.vis.viewer['L_elbow_target'].set_transform(left_elbow)   # for visualization
             self.vis.viewer['R_elbow_target'].set_transform(right_elbow)  # for visualization
 
+            self.vis.viewer['torso_target'].set_transform(torso)  # visualization
+
         self.opti.set_value(self.param_tf_l, left_wrist)
         self.opti.set_value(self.param_tf_r, right_wrist)
         self.opti.set_value(self.var_q_last, self.init_data) # for smooth
 
         self.opti.set_value(self.param_tf_elbow_l, left_elbow)
         self.opti.set_value(self.param_tf_elbow_r, right_elbow)
+
+        self.opti.set_value(self.param_tf_torso, torso)
 
         try:
             sol = self.opti.solve()
@@ -398,6 +416,13 @@ class G1_29_ArmIK:
         l_quat = R.align_vectors(np.array([l_hand_x, l_hand_y]), 
                                     np.array([[1, 0, 0], [0, 0, -1]]))[0].as_quat()
         
+        # torso orient
+        shoulder_vec = bvh_frame["LeftShoulder"] - bvh_frame["RightShoulder"]
+        spine_vec = bvh_frame["Neck"] - bvh_frame["Spine"]
+
+        torso_quat = R.align_vectors(np.array([shoulder_vec, spine_vec]), 
+                                     np.array([[0, 0, -1], [0, 1, 0]]))[0].as_quat()
+        
         R_tf_target = pin.SE3(
             pin.Quaternion(r_quat),
             bvh_frame["RightHand"]/150,
@@ -408,6 +433,7 @@ class G1_29_ArmIK:
             bvh_frame["LeftHand"]/150,
         )
 
+        # elbow poses
 
         R_tf_elbow_target = pin.SE3(
             pin.Quaternion(1, 0, 0, 0),
@@ -419,7 +445,13 @@ class G1_29_ArmIK:
             bvh_frame["LeftForeArm"]/150,
         )
 
-        return (self.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous, BendToBalance=BendToBalance))
+        Tf_target_torso = pin.SE3(
+            pin.Quaternion(torso_quat),
+            bvh_frame["Spine2"] / 150,
+        )
+
+
+        return (self.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous, L_tf_elbow_target.homogeneous, R_tf_elbow_target.homogeneous, Tf_target_torso.homogeneous, BendToBalance=BendToBalance))
 
 
 

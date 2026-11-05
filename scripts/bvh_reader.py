@@ -176,8 +176,9 @@ now = None
 
 cond = True
 while cond:
-    cond = False
-    for i in range(int(frame_num/8)):
+    # cond = False
+    for i in range(int(frame_num)):
+    # for i in [0]: # T-pose
 
         until = time.perf_counter()
         # current bvh frame
@@ -185,7 +186,7 @@ while cond:
 
 
         q_bend = 0
-        q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
+        # q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
         q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
         q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
@@ -194,19 +195,19 @@ while cond:
         # Solve ik in this block
         q, _, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
-        time_arms_arr.append(time.perf_counter() - start_time)
+        # time_arms_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
 
         q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
 
-        time_hand_r_arr.append(time.perf_counter() - start_time)
+        # time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
         q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
 
-        time_hand_l_arr.append(time.perf_counter() - start_time)
+        # time_hand_l_arr.append(time.perf_counter() - start_time)
 
         # print(com[0])
 
@@ -268,18 +269,18 @@ while cond:
         time.sleep(np.max([1/FRAMERATE - elapsed, 0.00001]))
 
 
-        x = list(range(len(time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
+        # x = list(range(len(time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
 
 # Строим линии
-plt.plot(x, time_arms_arr, marker='o', label='Руки')
-plt.plot(x, time_hand_l_arr, marker='s', label='Левая кисть')
-plt.plot(x, time_hand_r_arr, marker='^', label='Правая кисть')
+# plt.plot(x, time_arms_arr, marker='o', label='Руки')
+# plt.plot(x, time_hand_l_arr, marker='s', label='Левая кисть')
+# plt.plot(x, time_hand_r_arr, marker='^', label='Правая кисть')
 
-plt.xlabel('Номер точки')
-plt.ylabel('Время ретаргетинга')
-plt.title('Время ретаргетинга')
-plt.legend()
-plt.grid(True)
-plt.show()
+# plt.xlabel('Номер точки')
+# plt.ylabel('Время ретаргетинга')
+# plt.title('Время ретаргетинга')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
 
     
