@@ -137,7 +137,7 @@ def main():
     print("will start enabling hands in 5 seconds")
     time.sleep(5.0)
 
-    g1.enable_arm_sdk(duration=ENABLE_DURATION)
+    # g1.enable_arm_sdk(duration=ENABLE_DURATION)
     print(f"включаю arm_sdk ({ENABLE_DURATION} c)...")
 
     try:
@@ -146,7 +146,7 @@ def main():
         pass
     finally:
         print("выключаю arm_sdk...")
-        g1.disable_arm_sdk(duration=ENABLE_DURATION)
+        # g1.disable_arm_sdk(duration=ENABLE_DURATION)
         g1.hand_r.open()
         g1.hand_l.open()
         time.sleep(ENABLE_DURATION + 0.2)
