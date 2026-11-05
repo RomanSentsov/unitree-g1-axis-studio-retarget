@@ -1,3 +1,6 @@
+# TODO: Change Inspire api to unitree sdk (compatible with isaac sim from the box),
+# TODO: Add proper ee observations (currently observations = actions)
+
 import os
 import sys
 import time
@@ -14,9 +17,13 @@ from std_msgs.msg import Float64MultiArray
 
 from sshkeyboard import listen_keyboard, stop_listening
 
-# --- ВСТРОЕННЫЙ ЧТЕНИЕ СОСТОЯНИЯ G1_29 ЧЕРЕЗ DDS (Только чтение) ---
+# --- ВСТРОЕННОЕ ЧТЕНИЕ СОСТОЯНИЯ G1_29 ЧЕРЕЗ DDS (Только чтение) ---
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize, ChannelSubscriber
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowState_ as hg_LowState
+
+ARM_COMMAND_TOPIC = '/joint_states'
+L_HAND_COMMAND_TOPIC = '/hand_state/l'
+R_HAND_COMMAND_TOPIC = '/hand_state/r'
 
 class G1_29_JointArmIndex(IntEnum):
     kLeftShoulderPitch = 15
@@ -34,6 +41,11 @@ class G1_29_JointArmIndex(IntEnum):
     kRightWristPitch = 27
     kRightWristYaw = 28
 
+class G1_29_JointWaistIndex(IntEnum):
+    kWaistYaw = 12
+    kWaistRoll = 13
+    kWaistPitch = 14
+
 class G1_29_StateReader:
     def __init__(self, domain_id: int = 0, ifname: str = None):
         if ifname:
@@ -43,6 +55,8 @@ class G1_29_StateReader:
         
         self.latest_q = np.zeros(14)
         self.latest_dq = np.zeros(14)
+        self.latest_waist_q = np.zeros(3)
+        self.latest_waist_dq = np.zeros(3)
         self.lock = threading.Lock()
         self.sub_ready = False
 
@@ -67,6 +81,10 @@ class G1_29_StateReader:
                     for idx, joint_id in enumerate(G1_29_JointArmIndex):
                         self.latest_q[idx] = msg.motor_state[joint_id].q
                         self.latest_dq[idx] = msg.motor_state[joint_id].dq
+                    
+                    for idx, joint_id in enumerate(G1_29_JointWaistIndex):
+                        self.latest_waist_q[idx] = msg.motor_state[joint_id].q
+                        self.latest_waist_dq[idx] = msg.motor_state[joint_id].dq
                 self.sub_ready = True
             time.sleep(0.002)
 
@@ -77,6 +95,14 @@ class G1_29_StateReader:
     def get_current_dual_arm_dq(self) -> np.ndarray:
         with self.lock:
             return self.latest_dq.copy()
+
+    def get_current_waist_q(self) -> np.ndarray:
+        with self.lock:
+            return self.latest_waist_q.copy()
+
+    def get_current_waist_dq(self) -> np.ndarray:
+        with self.lock:
+            return self.latest_waist_dq.copy()
 # -----------------------------------------------------------------------------------------
 
 # ИМПОРТ НОВОГО API TELEIMAGER
@@ -103,6 +129,11 @@ ARM_JOINTS_RIGHT = [
     "right_shoulder_pitch_joint", "right_shoulder_roll_joint", "right_shoulder_yaw_joint",
     "right_elbow_joint", "right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint",
 ]
+WAIST_JOINTS = [
+    "waist_yaw_joint",
+    "waist_roll_joint",
+    "waist_pitch_joint",
+]
 
 class DemoRecorderNode(Node):
     def __init__(self, args):
@@ -118,16 +149,16 @@ class DemoRecorderNode(Node):
         # 2. Подписка на КОМАНДЫ (actions) из ROS 2
         self.latest_action_js: Optional[JointState] = None
         self.action_sub = self.create_subscription(
-            JointState, '/joint_states', self._action_cb, 10)
+            JointState, ARM_COMMAND_TOPIC, self._action_cb, 10)
         
         # 3. Подписки на кисти
         self.latest_hand_l: Optional[Float64MultiArray] = None
         self.latest_hand_r: Optional[Float64MultiArray] = None
         
         self.hand_l_sub = self.create_subscription(
-            Float64MultiArray, '/hand_l', self._hand_l_cb, 10)
+            Float64MultiArray, L_HAND_COMMAND_TOPIC, self._hand_l_cb, 10)
         self.hand_r_sub = self.create_subscription(
-            Float64MultiArray, '/hand_r', self._hand_r_cb, 10)
+            Float64MultiArray, R_HAND_COMMAND_TOPIC, self._hand_r_cb, 10)
 
         # 4. Клиент изображений (НОВОЕ API)
         self.get_logger().info(f"Scanning Image Server at {args.img_server_ip}...")
@@ -141,7 +172,6 @@ class DemoRecorderNode(Node):
         for topic, cfg in self.camera_config.items():
             if cfg.get('enable_zmq'):
                 self.get_logger().info(f"Initializing ZMQ client for camera: {topic} (port {cfg['zmq_port']})")
-                # ВАЖНО: topic должен быть первым позиционным аргументом!
                 self.camera_clients[topic] = TeleImageClient(
                     topic,
                     server_host=args.img_server_ip,
@@ -199,29 +229,57 @@ class DemoRecorderNode(Node):
                 
         return qpos, qvel, eff
 
+    def _extract_waist_data_from_ros(self, msg: JointState) -> tuple[List[float], List[float], List[float]]:
+        if msg is None or not msg.name:
+            return [], [], []
+        
+        qpos, qvel, eff = [], [], []
+        for name in WAIST_JOINTS:
+            if name in msg.name:
+                idx = msg.name.index(name)
+                qpos.append(float(msg.position[idx]) if idx < len(msg.position) else 0.0)
+                qvel.append(float(msg.velocity[idx]) if msg.velocity and idx < len(msg.velocity) else 0.0)
+                eff.append(float(msg.effort[idx]) if msg.effort and idx < len(msg.effort) else 0.0)
+            else:
+                qpos.append(0.0)
+                qvel.append(0.0)
+                eff.append(0.0)
+                
+        return qpos, qvel, eff
+
     def _build_data_dict(self):
         try:
             current_lr_arm_q = self.arm_state_reader.get_current_dual_arm_q()
             current_lr_arm_dq = self.arm_state_reader.get_current_dual_arm_dq()
+            current_waist_q = self.arm_state_reader.get_current_waist_q()
+            current_waist_dq = self.arm_state_reader.get_current_waist_dq()
             
             half = len(current_lr_arm_q) // 2
             left_arm_qpos = current_lr_arm_q[:half].tolist()
             right_arm_qpos = current_lr_arm_q[half:].tolist()
             left_arm_qvel = current_lr_arm_dq[:half].tolist()
             right_arm_qvel = current_lr_arm_dq[half:].tolist()
+            
+            waist_qpos = current_waist_q.tolist()
+            waist_qvel = current_waist_dq.tolist()
         except Exception as e:
             self.get_logger().warning(f"Failed to read DDS state: {e}")
             return None, None
 
-        hand_l_qpos = list(self.latest_hand_l.data) if self.latest_hand_l else []
-        hand_r_qpos = list(self.latest_hand_r.data) if self.latest_hand_r else []
+        # Извлекаем команды на кисти (6 чисел). Если данных нет, заполняем нулями.
+        hand_l_action = list(self.latest_hand_l.data) if self.latest_hand_l and len(self.latest_hand_l.data) >= 6 else [0.0] * 6
+        hand_r_action = list(self.latest_hand_r.data) if self.latest_hand_r and len(self.latest_hand_r.data) >= 6 else [0.0] * 6
+
+        # Временная затычка: наблюдения с кистей = команды на кисти
+        hand_l_qpos = hand_l_action
+        hand_r_qpos = hand_r_action
 
         states = {
             "left_arm": {"qpos": left_arm_qpos, "qvel": left_arm_qvel, "torque": []},
             "right_arm": {"qpos": right_arm_qpos, "qvel": right_arm_qvel, "torque": []},
             "left_ee": {"qpos": hand_l_qpos, "qvel": [], "torque": []},
             "right_ee": {"qpos": hand_r_qpos, "qvel": [], "torque": []},
-            "body": {"qpos": []} 
+            "body": {"qpos": waist_qpos, "qvel": waist_qvel, "torque": []} 
         }
 
         if self.latest_action_js is None:
@@ -229,16 +287,14 @@ class DemoRecorderNode(Node):
 
         l_a_qpos, l_a_qvel, l_a_eff = self._extract_arm_data_from_ros(self.latest_action_js, "left")
         r_a_qpos, r_a_qvel, r_a_eff = self._extract_arm_data_from_ros(self.latest_action_js, "right")
-        
-        hand_l_action = list(self.latest_hand_l.data) if self.latest_hand_l else []
-        hand_r_action = list(self.latest_hand_r.data) if self.latest_hand_r else []
+        waist_a_qpos, waist_a_qvel, waist_a_eff = self._extract_waist_data_from_ros(self.latest_action_js)
 
         actions = {
             "left_arm": {"qpos": l_a_qpos, "qvel": l_a_qvel, "torque": l_a_eff},
             "right_arm": {"qpos": r_a_qpos, "qvel": r_a_qvel, "torque": r_a_eff},
             "left_ee": {"qpos": hand_l_action, "qvel": [], "torque": []},
             "right_ee": {"qpos": hand_r_action, "qvel": [], "torque": []},
-            "body": {"qpos": []}
+            "body": {"qpos": waist_a_qpos, "qvel": waist_a_qvel, "torque": waist_a_eff}
         }
 
         return states, actions
@@ -271,26 +327,37 @@ class DemoRecorderNode(Node):
                     colors = {}
                     depths = {}
                     
+                    # Обработка камер с корректной динамической индексацией
+                    color_idx = 0
+                    
                     # Обработка головной камеры
                     if 'head_camera' in self.camera_clients:
                         head_frame = self.camera_clients['head_camera'].get_frame()
-                        if head_frame.bgr is not None:
+                        if head_frame is not None and head_frame.bgr is not None:
                             if self.camera_config['head_camera'].get('binocular'):
                                 w = self.camera_config['head_camera']['image_shape'][1] // 2
-                                colors["color_0"] = head_frame.bgr[:, :w]
-                                colors["color_1"] = head_frame.bgr[:, w:]
+                                colors[f"color_{color_idx}"] = head_frame.bgr[:, :w]
+                                color_idx += 1
+                                colors[f"color_{color_idx}"] = head_frame.bgr[:, w:]
+                                color_idx += 1
                             else:
-                                colors["color_0"] = head_frame.bgr
+                                colors[f"color_{color_idx}"] = head_frame.bgr
+                                color_idx += 1
 
-                    # Обработка камер на запястьях (динамическое назначение индексов)
-                    color_idx = 2 if self.camera_config.get('head_camera', {}).get('binocular') else 1
-                    
+                    # Обработка камер на запястьях
                     for cam_name in ['left_wrist_camera', 'right_wrist_camera']:
                         if cam_name in self.camera_clients:
                             frame = self.camera_clients[cam_name].get_frame()
-                            if frame.bgr is not None:
-                                colors[f"color_{color_idx}"] = frame.bgr
-                                color_idx += 1
+                            if frame is not None and frame.bgr is not None:
+                                if self.camera_config[cam_name].get('binocular'):
+                                    w = self.camera_config[cam_name]['image_shape'][1] // 2
+                                    colors[f"color_{color_idx}"] = frame.bgr[:, :w]
+                                    color_idx += 1
+                                    colors[f"color_{color_idx}"] = frame.bgr[:, w:]
+                                    color_idx += 1
+                                else:
+                                    colors[f"color_{color_idx}"] = frame.bgr
+                                    color_idx += 1
 
                     self.recorder.add_item(colors=colors, depths=depths, states=states, actions=actions)
 
