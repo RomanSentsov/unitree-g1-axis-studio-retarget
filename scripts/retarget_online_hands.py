@@ -272,13 +272,13 @@ class MocapAxisDemo:
 
         start_time = time.perf_counter()
 
-        q_r_hand = self.retargeter_right.retarget_to_registers(bvh_frame)
+        q_r_hand = self.retargeter_right.retarget_to_radians(bvh_frame)
 
         # self.time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
-        q_l_hand = self.retargeter_left.retarget_to_registers(bvh_frame)
+        q_l_hand = self.retargeter_left.retarget_to_radians(bvh_frame)
 
         # self.time_hand_l_arr.append(time.perf_counter() - start_time)
 

@@ -190,13 +190,22 @@ class InspireHandRetargeterWrapper(HandRetargeterWrapper):
         self.q_max = limits[:, 1].astype(np.float64)
         self.q_range = (self.q_max - self.q_min + 1e-6).astype(np.float64)
 
+    def retarget_to_radians(self, frame_dict: dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Retargets BVH hand landmarks into joint angles in radians [float64]
+        in canonical hardware order: [pinky, ring, middle, index, thumb_bend, thumb_rot].
+        Matches the joint ordering and conventions expected by Unitree DDS
+        and unitree_sim_isaaclab.
+        """
+        qpos_full = self.retarget(frame_dict)
+        return qpos_full[self.inspire_indices].copy()
+
     def retarget_to_registers(self, frame_dict: dict[str, np.ndarray]) -> np.ndarray:
         """
         Retargets BVH hand landmarks directly into Inspire hand register values [0..1800]
         in canonical hardware order: [pinky, ring, middle, index, thumb_bend, thumb_rot].
         Zero-overhead vectorized conversion in NumPy (< 1 microsecond).
         """
-        qpos_full = self.retarget(frame_dict)
-        q_target = qpos_full[self.inspire_indices]
+        q_target = self.retarget_to_radians(frame_dict)
         registers = np.clip((q_target - self.q_min) / self.q_range, 0.0, 1.0) * 1800.0
         return registers.astype(np.int32)

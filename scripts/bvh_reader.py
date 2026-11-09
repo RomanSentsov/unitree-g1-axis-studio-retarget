@@ -188,9 +188,6 @@ while cond:
         q_bend = 0
         # q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
-        q_l_hand = retargeter_left.retarget_to_registers(bvh_dict)
-        q_r_hand = retargeter_right.retarget_to_registers(bvh_dict)
-
         start_time = time.perf_counter()
         # Solve ik in this block
         q, _, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
@@ -199,13 +196,13 @@ while cond:
 
         start_time = time.perf_counter()
 
-        q_r_hand = retargeter_right.retarget_to_registers(bvh_dict)
+        q_r_hand = retargeter_right.retarget_to_radians(bvh_dict)
 
         # time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
-        q_l_hand = retargeter_left.retarget_to_registers(bvh_dict)
+        q_l_hand = retargeter_left.retarget_to_radians(bvh_dict)
 
         # time_hand_l_arr.append(time.perf_counter() - start_time)
 

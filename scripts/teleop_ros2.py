@@ -11,6 +11,9 @@ from std_msgs.msg import Float64MultiArray
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 
+from typing import Literal
+import tyro
+
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -88,14 +91,7 @@ class Bridge(Node):
         self.create_subscription(JointState, TOPIC_ARMS, self.on_msg_arms, 10, callback_group=arm_cb_group)
         self.create_subscription(Float64MultiArray, TOPIC_R_HAND, self.on_msg_r_hand, 1, callback_group=hand_r_cb_group)
         self.create_subscription(Float64MultiArray, TOPIC_L_HAND, self.on_msg_l_hand, 1, callback_group=hand_l_cb_group)
-        self.get_logger().info(f"слушаю топики")
-
-    def to_inspire(self, value_rad, max_rad):
-        """0..max_rad -> 0..1000 для Inspire Hand."""
-        if max_rad <= 0:
-            return 0
-        v = max(0.0, min(max_rad, value_rad))
-        return int(1000.0 * v / max_rad)
+        self.get_logger().info(f"слушаю топики (hand_interface={self.g1.hand_interface})")
 
     def on_msg_arms(self, msg):
   
@@ -121,39 +117,62 @@ class Bridge(Node):
         self.g1.set_hand_r(q)
 
 
-def main():
+def main(
+    sim: bool = False,
+    hand_interface: Literal["dds", "tcp"] = "dds",
+    ifname: str = IFNAME,
+    control_dt: float = CONTROL_DT,
+    enable_duration: float = ENABLE_DURATION,
+):
+    """Bridge ROS 2 /joint_states and hand topics to Unitree G1 & Inspire Hands.
+
+    Args:
+        sim: Whether to run in simulation mode (connects to Isaac Lab via DDS channel 1).
+        hand_interface: Hand control protocol ('dds' for Unitree DDS rt/inspire/cmd or 'tcp' for Modbus TCP).
+        ifname: Network interface for wired connection to the real robot.
+        control_dt: Control loop timestep in seconds (default: 0.02 -> 50 Hz).
+        enable_duration: Duration in seconds to ramp into arm_sdk on the real robot.
+    """
     rclpy.init()
     print("ros2 inited")
 
-
-    g1 = UnitreeG1(ifname=IFNAME, control_dt=CONTROL_DT)
-    print("g1 inited")
+    g1 = UnitreeG1(
+        ifname=ifname,
+        control_dt=control_dt,
+        hand_interface=hand_interface,
+        sim=sim,
+    )
+    print(f"g1 inited (sim={sim}, hand_interface={g1.hand_interface})")
 
     node = Bridge(g1)
     executor = MultiThreadedExecutor()
     executor.add_node(node)
     print("node inited")
 
-    print("will start enabling hands in 5 seconds")
-    time.sleep(5.0)
-
-    g1.enable_arm_sdk(duration=ENABLE_DURATION)
-    print(f"включаю arm_sdk ({ENABLE_DURATION} c)...")
+    if not sim:
+        print("will start enabling hands in 5 seconds")
+        time.sleep(5.0)
+        g1.enable_arm_sdk(duration=enable_duration)
+        print(f"включаю arm_sdk ({enable_duration} c)...")
+    else:
+        print("стримлю команды в симулятор (rt/lowcmd и rt/inspire/cmd), Ctrl+C для выхода")
 
     try:
         executor.spin()
     except KeyboardInterrupt:
         pass
     finally:
-        print("выключаю arm_sdk...")
-        g1.disable_arm_sdk(duration=ENABLE_DURATION)
+        print("выключение...")
+        if not sim:
+            print("выключаю arm_sdk...")
+            g1.disable_arm_sdk(duration=enable_duration)
         g1.hand_r.open()
         g1.hand_l.open()
-        time.sleep(ENABLE_DURATION + 0.2)
+        time.sleep(enable_duration + 0.2 if not sim else 0.5)
         g1.shutdown()
         node.destroy_node()
         rclpy.shutdown()
 
 
 if __name__ == "__main__":
-    main()
+    tyro.cli(main)
