@@ -1,4 +1,7 @@
 import time
+import sys, os
+parent2_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(parent2_dir)
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_
@@ -6,6 +9,12 @@ from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
+
+from unitree_sdk2py.g1.audio.g1_audio_client import AudioClient
+from utils.wav import read_wav, play_pcm_stream
+
+WAV_EP_FINISHED = "audio/episode_saved.wav"
+WAV_EP_STARTED = "audio/episode_started.wav"
 
 class G1JointIndex:
     # Left leg
@@ -123,11 +132,25 @@ class InspireHandTCP:
 
 
 class UnitreeG1:
-    def __init__(self, ifname="enxc84d4427fee8", control_dt=0.02):
+
+    # TODO: add --sim argument that makes for /lowcmd topic when domain set to 1 (but not to 0!!!)
+    def __init__(self, domain_id=0, ifname="enxc84d4427fee8", control_dt=0.02):
         if ifname is not None:
-            ChannelFactoryInitialize(0, ifname)
+            ChannelFactoryInitialize(domain_id, ifname)
         else:
-            ChannelFactoryInitialize(0)
+            ChannelFactoryInitialize(domain_id)
+
+        self.audioClient = AudioClient()
+        self.audioClient.Init()
+        self.audioClient.SetTimeout(4.0)
+        self.audioClient.SetVolume(70)
+
+        self.ep_started_audio, sample_rate, num_channels, is_ok = read_wav(WAV_EP_STARTED)
+        if not is_ok or sample_rate != 16000 or num_channels != 1:
+            print("[ERROR] WAV must be 16kHz mono")
+        self.ep_finished_audio, sample_rate, num_channels, is_ok = read_wav(WAV_EP_FINISHED)
+        if not is_ok or sample_rate != 16000 or num_channels != 1:
+            print("[ERROR] WAV must be 16kHz mono")
 
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.low_state = None
@@ -147,9 +170,6 @@ class UnitreeG1:
         # Hands:
         self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
         self.hand_l = InspireHandTCP(host="192.168.123.210", port=6000) 
-
-        #
-
 
         # Целевые позиции — все три группы устроены одинаково
         self.target_pos_l = None       # 7 значений
@@ -252,6 +272,12 @@ class UnitreeG1:
         self.enable_duration = duration
         self.enable_start_time = None
         self.enable_start_val = self.enable_current
+
+    def say_ep_start(self):
+        play_pcm_stream(self.audioClient, self.ep_started_audio, "start episode")
+
+    def say_ep_saved(self):
+        play_pcm_stream(self.audioClient, self.ep_finished_audio, "start saved")
 
     def shutdown(self):
         if self.thread is not None:
