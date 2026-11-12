@@ -20,7 +20,7 @@ https://docs.ros.org/en/humble/Installation.html
 
 ### Conda
 
-Conda is necesarry as pinnochio with built-in casadi module can only be obtained throug conda-forge. Please install it
+Conda is necessary as pinocchio with built-in casadi module can only be obtained through conda-forge. Please install it
 
 https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install
 
@@ -28,17 +28,18 @@ Create conda env:
 
 ```
 conda create python=3.10 pinocchio=3.1.0 numpy=1.26.4 -c conda-forge -n unitree_noitom_teleop
-and activate
+
+conda activate unitree_noitom_teleop
 ```
 
-
-Install libraries from requirements.py through conda install -c conda_forge
+Install libraries from requirements.txt through
+ ```pip install -r requirements.txt```
 
 ### Unitree sdk2 py
 
-Unitree_sdk2_py is required to run retargeting on the real robot:
+Unitree_sdk2_python is required to run retargeting on the real robot:
 
-First, install cyclone dds in your env:
+First, install cyclonedds in your env:
 
 ```
 cd ~
@@ -55,7 +56,7 @@ export CYCLONEDDS_HOME=~/cyclonedds/install
 pip3 install -e .
 cd ..
 ```
-If encounter any errors, check out official guide:
+If you encounter any errors, check out the official guide:
 
 https://github.com/unitreerobotics/unitree_sdk2_python
 
@@ -77,15 +78,15 @@ To receive camera data from the robot via ZeroMQ, install teleimager (client ver
 pip install teleimager
 ```
 
-If encounter any errors, check out official guide:
+If you encounter any errors, check out the official guide:
 
 https://github.com/unitreerobotics/teleimager
 
 ### Visualization
 
-Visualization currently uses RVIZ. Refer to this repoo:
+Visualization currently uses RVIZ. Refer to this repo:
 
-https://github.com/pnmocap/mocap_ros_urdf
+https://github.com/RomanSentsov/mocap_ros_urdf
 
 # Axis Studio setup
 
@@ -97,7 +98,7 @@ Set up the correct parameters in Axis Studio settings to broadcast BVH (BVH - Ed
 
 # Robot setup
 
-You need to install teleimager-server on robot to stream caneras from it. Please refer to official guide: 
+You need to install teleimager-server on robot to stream cameras from it. Please refer to official guide: 
 https://github.com/unitreerobotics/teleimager
 
 Make sure to install it with [all] flag to support all types of cameras
@@ -113,16 +114,16 @@ Make sure to install it with [all] flag to support all types of cameras
 ```
 python src/main.py
 ```
-Only starts retargeting and visualization. Will not send any commands on robot, and does not require robot to be connected to work
+Only starts retargeting and visualization. Will not send any commands to the robot, and does not require the robot to be connected to work
 
 ### Control the robot
 ```
 python src/main.py --control-robot --network-interface <yourNetInterface>
 ```
 
-<yourNetInterface> is the interface through which you are connected as listed in ``` ip a```.
+<yourNetInterface> is the interface through which you are connected as listed in `ip a`.
 
-This command will start retarget and will send commands on robot. When launching, robot won't move it's arms until 'e' is pressed. After that, it will wait 5 sec and slowly enable arms (move them into your curent state like in visualization). To return arms back to it's idle pose, press e again, which will slowly release the arms.
+This command will start retarget and will send commands to the robot. When launching, robot won't move its arms until 'e' is pressed. After that, it will wait 5 sec and slowly enable arms (move them into your current state like in visualization). To return arms back to their idle pose, press 'e' again, which will slowly release the arms.
 
 To close the program, press 'q'
 Please don't interrupt the program when transition is happening or when it is shutting down.
@@ -138,7 +139,7 @@ This will allow for dataset recording (press 's' for start/stop demonstration re
 
 Will create folder ```task_name/``` in --task-dir (```./data/``` by default)
 
-Records cameras, states and actions of arms, hands and torso in unitree format. Please refer to unitree_lerobor to edit, convert to Lerobot and train policies:
+Records cameras, states and actions of arms, hands and waist in unitree format. Please refer to unitree_lerobot to edit, convert to Lerobot and train policies:
 
 https://github.com/unitreerobotics/unitree_lerobot
 
@@ -149,12 +150,12 @@ https://github.com/unitreerobotics/unitree_lerobot
 
 - --record-frequency: recording frequency of the dataset. Default is 50 Hz.
 
-- --img-server-ip: teleimager-server ip. Robot's 192.168.123.164 is defult.
+- --img-server-ip: teleimager-server ip. Robot's 192.168.123.164 is default.
 
-- --sim: swith interface to control simulated robot in isaac_sim. To be implemented soon.
+- --sim: switch interface to control simulated robot in isaac_sim. To be implemented soon.
 
 
 ## TODO:
 - Implement --sim to control simulated robot
 - Switch to unitree hand control method
-- Fix hand dataset recording (currently ee states are just copies of actions)   
+- Fix hand dataset recording (currently ee states are just copies of actions)
