@@ -8,3 +8,7 @@ pyyaml
 pytransform3d
 nlopt
 viser
+sshkeyboard
+PyTurboJPEG
+rerun-sdk
+meshcat

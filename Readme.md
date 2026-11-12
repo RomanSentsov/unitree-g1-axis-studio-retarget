@@ -27,13 +27,25 @@ https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install
 Create conda env:
 
 ```
-conda create python=3.10 pinocchio=3.1.0 numpy=1.26.4 -c conda-forge -n unitree_noitom_teleop
+conda create python=3.10 pinocchio=3.1.0 numpy=1.26.4 libjpeg-turbo -c conda-forge -n unitree_noitom_teleop
 
 conda activate unitree_noitom_teleop
+
+```
+
+Clone this repo:
+
+```
+cd ~/
+
+git clone https://github.com/RomanSentsov/unitree-g1-axis-studio-retarget.git -b user_application
+
+cd unitree-g1-axis-studio-retarget/
 ```
 
 Install libraries from requirements.txt through
- ```pip install -r requirements.txt```
+
+```pip install -r requirements.txt```
 
 ### Unitree sdk2 py
 
@@ -51,7 +63,9 @@ cmake --build . --target install
 Enter the unitree_sdk2_python directory, set CYCLONEDDS_HOME to the path of the cyclonedds you just compiled, and then install unitree_sdk2_python.
 
 ```
-cd ~/unitree-g1-axis-studio-retarget/unitree_sdk2_python
+cd ~/unitree-g1-axis-studio-retarget
+git clone https://github.com/unitreerobotics/unitree_sdk2_python.git
+cd unitree_sdk2_python
 export CYCLONEDDS_HOME=~/cyclonedds/install
 pip3 install -e .
 cd ..
@@ -65,9 +79,9 @@ https://github.com/unitreerobotics/unitree_sdk2_python
 API to receive data from axis studio (bvh stream):
 
 ```
-cd MocapApi
+cd MocapApi/MocapApi
 pip install .
-cd ..
+cd ../..
 ```
 
 ### Teleimager:
@@ -154,6 +168,16 @@ https://github.com/unitreerobotics/unitree_lerobot
 
 - --sim: switch interface to control simulated robot in isaac_sim. To be implemented soon.
 
+
+## Errors
+
+If main.py can't start, make sure pinnochio is 3.1.0 and numpy is 1.26.4. If that is not the case, reinstall them:
+
+```
+pip uninstall pinocchio numpy
+conda uninstall pinocchio numpy
+conda install numpy=1.26.4 pinocchio=3.1.0 -c conda-forge
+```
 
 ## TODO:
 - Implement --sim to control simulated robot
