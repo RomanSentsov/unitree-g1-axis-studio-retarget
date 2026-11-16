@@ -96,7 +96,8 @@ WAIST_JOINTS = [
 
 
 # ---------------- Inspire Hand Constants & DDS Wrapper ----------------
-
+MODBUS_TCP_AVAILABLE = False
+'''
 try:
     from RH56DFTP.RH56DFTP_TCP import RH56DFTP_TCP
     from Register.RegisterKey.ftp_registers_keys import (
@@ -107,6 +108,7 @@ try:
 except ImportError:
     MODBUS_TCP_AVAILABLE = False
     HAND_POS_REGISTERS = list(range(6))
+    '''
 
 HAND_MIN = 0
 HAND_MAX = 1800
