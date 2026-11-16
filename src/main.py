@@ -245,10 +245,8 @@ class MainController:
         self.g1.set_waist(waist)
         
         if len(q_l_hand) == 6 and len(q_r_hand) == 6:
-            q_l = np.array(q_l_hand) * 1800 * 4 / 3.14
-            q_r = np.array(q_r_hand) * 1800 * 4 / 3.14
-            self.g1.set_hand_l(q_l)
-            self.g1.set_hand_r(q_r)
+            self.g1.set_hand_l(q_l_hand)
+            self.g1.set_hand_r(q_r_hand)
 
     def _build_data_dict(self):
         try:
