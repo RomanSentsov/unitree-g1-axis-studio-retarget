@@ -1,12 +1,16 @@
 import time
 import sys, os
+import numpy as np
+
 parent2_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(parent2_dir)
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowState_
+from unitree_sdk2py.idl.default import unitree_go_msg_dds__MotorCmd_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
+from unitree_sdk2py.idl.unitree_go.msg.dds_ import MotorCmds_, MotorStates_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
 
@@ -91,44 +95,55 @@ WAIST_JOINTS = [
 ]
 
 
-# Inspire hand
-
-from RH56DFTP.RH56DFTP_TCP import RH56DFTP_TCP
-from Register.RegisterKey.ftp_registers_keys import (
-    POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5
-)
-
-# Порядок пальцев Inspire (совпадает с примером):
-# [pinky, ring, middle, index, thumb_bend, thumb_rot]
-HAND_POS_REGISTERS = [POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5]
+# ---------------- Inspire Hand Constants & DDS Wrapper ----------------
+MODBUS_TCP_AVAILABLE = False
+'''
+try:
+    from RH56DFTP.RH56DFTP_TCP import RH56DFTP_TCP
+    from Register.RegisterKey.ftp_registers_keys import (
+        POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5
+    )
+    HAND_POS_REGISTERS = [POS_SET_0, POS_SET_1, POS_SET_2, POS_SET_3, POS_SET_4, POS_SET_5]
+    MODBUS_TCP_AVAILABLE = True
+except ImportError:
+    MODBUS_TCP_AVAILABLE = False
+    HAND_POS_REGISTERS = list(range(6))
+    '''
 
 HAND_MIN = 0
-HAND_MAX = 1800     # полный ход по примеру
+HAND_MAX = 1800
+
+kTopicInspireCommand = "rt/inspire/cmd"
+kTopicInspireState   = "rt/inspire/state"
+
+Inspire_Right_Hand_JointIndex = [0, 1, 2, 3, 4, 5]
+Inspire_Left_Hand_JointIndex  = [6, 7, 8, 9, 10, 11]
+
+# Limits in radians for Inspire RH56DFTP (URDF order: [pinky, ring, middle, index, thumb_bend, thumb_rot])
+INSPIRE_JOINT_LIMITS_MAX = np.array([1.4381, 1.4381, 1.4381, 1.4381, 0.5864, 1.1641], dtype=np.float64)
 
 
-class InspireHandTCP:
-    """Обёртка над RH56DFTP_TCP для одной кисти."""
+class SingleHandDDSWrapper:
+    """Compatibility wrapper preserving .open(), .close(), .set_positions() interface."""
 
-    def __init__(self, host: str, port: int = 6000):
-        self.client = RH56DFTP_TCP(host=host, port=port)
+    def __init__(self, g1, side: str):
+        self.g1 = g1
+        self.side = side.lower()
 
     def set_positions(self, positions_6):
-        """positions_6: список из 6 значений 0..1800 в порядке
-        [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
-        if len(positions_6) != 6:
-            raise ValueError("нужно ровно 6 значений")
-        for reg, val in zip(HAND_POS_REGISTERS, positions_6):
-            v = int(max(HAND_MIN, min(HAND_MAX, val)))
-            self.client.set(reg, v)
+        if self.side in ("r", "right"):
+            self.g1.set_hand_r(positions_6)
+        else:
+            self.g1.set_hand_l(positions_6)
 
     def open(self):
-        self.set_positions([0] * 6)
+        if self.side in ("r", "right"):
+            self.g1.open_hand_r()
+        else:
+            self.g1.open_hand_l()
 
     def close(self):
-        try:
-            self.client.close()
-        except Exception:
-            pass
+        pass
 
 
 class UnitreeG1:
@@ -167,9 +182,37 @@ class UnitreeG1:
         self.subscriber = ChannelSubscriber("rt/lowstate", LowState_)
         self.subscriber.Init(self._low_state_handler, 10)
 
-        # Hands:
-        self.hand_r = InspireHandTCP(host="192.168.123.211", port=6000)
-        self.hand_l = InspireHandTCP(host="192.168.123.210", port=6000) 
+        # Hands DDS (rt/inspire/cmd, rt/inspire/state)
+        self.hand_cmd_pub = ChannelPublisher(kTopicInspireCommand, MotorCmds_)
+        self.hand_cmd_pub.Init()
+
+        self.hand_msg = MotorCmds_()
+        self.hand_msg.cmds = [unitree_go_msg_dds__MotorCmd_() for _ in range(12)]
+
+        self.hand_state_sub = ChannelSubscriber(kTopicInspireState, MotorStates_)
+        self.hand_state_sub.Init(self._hand_state_handler, 10)
+
+        self.target_hand_r = [0.0] * 6
+        self.target_hand_l = [0.0] * 6
+        self.latest_hand_state_r = [0.0] * 6
+        self.latest_hand_state_l = [0.0] * 6
+        self.has_hand_state = False
+
+        # Physical Modbus TCP hands (transparent hardware bridge for RH56DFTP on real robot)
+        self.tcp_hand_r = None
+        self.tcp_hand_l = None
+        if MODBUS_TCP_AVAILABLE:
+            try:
+                self.tcp_hand_r = RH56DFTP_TCP(host="192.168.123.211", port=6000)
+            except Exception:
+                pass
+            try:
+                self.tcp_hand_l = RH56DFTP_TCP(host="192.168.123.210", port=6000)
+            except Exception:
+                pass
+
+        self.hand_r = SingleHandDDSWrapper(self, "right")
+        self.hand_l = SingleHandDDSWrapper(self, "left") 
 
         # Целевые позиции — все три группы устроены одинаково
         self.target_pos_l = None       # 7 значений
@@ -206,6 +249,12 @@ class UnitreeG1:
         self.low_state = msg
         if not self.first_update:
             self.first_update = True
+
+    def _hand_state_handler(self, msg: MotorStates_):
+        if len(msg.states) >= 12:
+            self.latest_hand_state_r = [float(msg.states[j].q) for j in Inspire_Right_Hand_JointIndex]
+            self.latest_hand_state_l = [float(msg.states[j].q) for j in Inspire_Left_Hand_JointIndex]
+            self.has_hand_state = True
 
     def _low_cmd_write(self):
         if not self.first_update:
@@ -284,21 +333,99 @@ class UnitreeG1:
             self.thread.Stop()
             self.running = False
         try:
-            self.hand_r.close()
-            self.hand_l.close()
+            self.open_hands()
         except Exception:
             pass
+        if self.tcp_hand_r is not None:
+            try:
+                self.tcp_hand_r.close()
+            except Exception:
+                pass
+        if self.tcp_hand_l is not None:
+            try:
+                self.tcp_hand_l.close()
+            except Exception:
+                pass
 
-    # Inpire hand API
+    # ---- Inspire Hand API ----
 
     def set_hand_r(self, angles_r):
-        """angles_r: 6 значений 0..1800 в порядке
+        """angles_r: 6 joint values in radians in canonical order:
         [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
-        self.hand_r.set_positions(angles_r)
+        if len(angles_r) != 6:
+            raise ValueError("set_hand_r: нужно ровно 6 значений")
+        q = np.asarray(angles_r, dtype=np.float64)
+        if np.any(q > 3.14):
+            q = np.clip(q / 1800.0, 0.0, 1.0) * INSPIRE_JOINT_LIMITS_MAX
+        else:
+            q = np.clip(q, 0.0, INSPIRE_JOINT_LIMITS_MAX)
 
+        self.target_hand_r = q.tolist()
+
+        # 1. DDS (simulation / xr_teleoperate standard)
+        for idx, joint_id in enumerate(Inspire_Right_Hand_JointIndex):
+            self.hand_msg.cmds[joint_id].q = float(q[idx])
+        self.hand_cmd_pub.Write(self.hand_msg)
+
+        # 2. Modbus TCP (physical RH56DFTP hardware on real robot)
+        if self.tcp_hand_r is not None:
+            try:
+                reg_vals = np.clip(q / INSPIRE_JOINT_LIMITS_MAX, 0.0, 1.0) * 1800.0
+                for reg, val in zip(HAND_POS_REGISTERS, reg_vals):
+                    self.tcp_hand_r.set(reg, int(val))
+            except Exception:
+                pass
 
     def set_hand_l(self, angles_l):
-        self.hand_l.set_positions(angles_l)
+        """angles_l: 6 joint values in radians in canonical order:
+        [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
+        if len(angles_l) != 6:
+            raise ValueError("set_hand_l: нужно ровно 6 значений")
+        q = np.asarray(angles_l, dtype=np.float64)
+        if np.any(q > 3.14):
+            q = np.clip(q / 1800.0, 0.0, 1.0) * INSPIRE_JOINT_LIMITS_MAX
+        else:
+            q = np.clip(q, 0.0, INSPIRE_JOINT_LIMITS_MAX)
+
+        self.target_hand_l = q.tolist()
+
+        # 1. DDS (simulation / xr_teleoperate standard)
+        for idx, joint_id in enumerate(Inspire_Left_Hand_JointIndex):
+            self.hand_msg.cmds[joint_id].q = float(q[idx])
+        self.hand_cmd_pub.Write(self.hand_msg)
+
+        # 2. Modbus TCP (physical RH56DFTP hardware on real robot)
+        if self.tcp_hand_l is not None:
+            try:
+                reg_vals = np.clip(q / INSPIRE_JOINT_LIMITS_MAX, 0.0, 1.0) * 1800.0
+                for reg, val in zip(HAND_POS_REGISTERS, reg_vals):
+                    self.tcp_hand_l.set(reg, int(val))
+            except Exception:
+                pass
+
+    def get_hand_r(self) -> list[float]:
+        """Returns current right hand joint angles in radians:
+        [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
+        if self.has_hand_state:
+            return list(self.latest_hand_state_r)
+        return list(self.target_hand_r)
+
+    def get_hand_l(self) -> list[float]:
+        """Returns current left hand joint angles in radians:
+        [pinky, ring, middle, index, thumb_bend, thumb_rot]."""
+        if self.has_hand_state:
+            return list(self.latest_hand_state_l)
+        return list(self.target_hand_l)
+
+    def open_hand_r(self):
+        self.set_hand_r([0.0] * 6)
+
+    def open_hand_l(self):
+        self.set_hand_l([0.0] * 6)
+
+    def open_hands(self):
+        self.open_hand_r()
+        self.open_hand_l()
 
     def __del__(self):
         self.shutdown()
