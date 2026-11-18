@@ -1,5 +1,3 @@
-numpy==1.26.4
-pin==3.1.0
 plusml-rh56dftp
 trimesh
 tyro
@@ -10,3 +8,7 @@ pyyaml
 pytransform3d
 nlopt
 viser
+sshkeyboard
+PyTurboJPEG
+rerun-sdk
+meshcat

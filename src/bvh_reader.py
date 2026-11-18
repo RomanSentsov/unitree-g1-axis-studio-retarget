@@ -27,8 +27,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ASSETS_DIR = PROJECT_ROOT / "hands"
 BVH_FILEPATH = PROJECT_ROOT / "recs" / "bvh_recs" / "bvh_misha_no_xyz_chr01_MAYA.bvh"
 
-CONFIG_PATH_RIGHT = PROJECT_ROOT / "scripts" / "hands_retargeting" / "configs" / "teleop" / "rh56dftp_right.yml"
-CONFIG_PATH_LEFT = PROJECT_ROOT / "scripts" / "hands_retargeting" / "configs" / "teleop" / "rh56dftp_left.yml"
+CONFIG_PATH_RIGHT = PROJECT_ROOT / "src" / "hands_retargeting" / "configs" / "teleop" / "rh56dftp_right.yml"
+CONFIG_PATH_LEFT = PROJECT_ROOT / "src" / "hands_retargeting" / "configs" / "teleop" / "rh56dftp_left.yml"
 
 URDF_PATH_RIGHT = ASSETS_DIR / "rh56dftp" / "rh56dftp_modified_right.urdf"
 URDF_PATH_LEFT = ASSETS_DIR / "rh56dftp" / "rh56dftp_modified_left.urdf"
@@ -114,6 +114,7 @@ FILEPATH = "recs/bvh_recs/bvh_misha_no_xyz_chr01_MAYA.bvh"
 # FILEPATH = "recs/bvh_recs/Aleksandr_recs/rec1_chr01_MAYA.bvh"
 FILEPATH_EX = "recs/bvh_recs/example1.bvh"
 
+ARM_COMMAND_TOPIC = '/unitree_noitom_teleop/arms_waist_cmd'
 
 # hands
 
@@ -167,7 +168,7 @@ pub_hand_r = None
 if PUBLISH_ROS2:
     rclpy.init()
     ros_node = Node("mocap_retargeter")
-    pub_joints = ros_node.create_publisher(JointState, "/joint_states", 10)
+    pub_joints = ros_node.create_publisher(JointState, ARM_COMMAND_TOPIC, 10)
     pub_hand_l = ros_node.create_publisher(Float64MultiArray, "/hand_state/l", 10)
     pub_hand_r = ros_node.create_publisher(Float64MultiArray, "/hand_state/r", 10)
 
@@ -176,8 +177,9 @@ now = None
 
 cond = True
 while cond:
-    cond = False
-    for i in range(int(frame_num/8)):
+    # cond = False
+    for i in range(int(frame_num)):
+    # for i in [0]: # T-pose
 
         until = time.perf_counter()
         # current bvh frame
@@ -185,7 +187,7 @@ while cond:
 
 
         q_bend = 0
-        q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
+        # q, tau, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
         q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
         q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
@@ -194,19 +196,19 @@ while cond:
         # Solve ik in this block
         q, _, q_bend = arm_ik.solve_ik_bvh_frame(bvh_dict, BendToBalance=True)
 
-        time_arms_arr.append(time.perf_counter() - start_time)
+        # time_arms_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
 
         q_r_hand = retargeter_right.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
 
-        time_hand_r_arr.append(time.perf_counter() - start_time)
+        # time_hand_r_arr.append(time.perf_counter() - start_time)
 
         start_time = time.perf_counter()
         
         q_l_hand = retargeter_left.retarget(bvh_dict)[[2, 6, 4, 0, 9, 8]]
 
-        time_hand_l_arr.append(time.perf_counter() - start_time)
+        # time_hand_l_arr.append(time.perf_counter() - start_time)
 
         # print(com[0])
 
@@ -268,18 +270,18 @@ while cond:
         time.sleep(np.max([1/FRAMERATE - elapsed, 0.00001]))
 
 
-        x = list(range(len(time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
+        # x = list(range(len(time_arms_arr)))   # [0, 1, 2, 3, 4, 5]
 
 # Строим линии
-plt.plot(x, time_arms_arr, marker='o', label='Руки')
-plt.plot(x, time_hand_l_arr, marker='s', label='Левая кисть')
-plt.plot(x, time_hand_r_arr, marker='^', label='Правая кисть')
+# plt.plot(x, time_arms_arr, marker='o', label='Руки')
+# plt.plot(x, time_hand_l_arr, marker='s', label='Левая кисть')
+# plt.plot(x, time_hand_r_arr, marker='^', label='Правая кисть')
 
-plt.xlabel('Номер точки')
-plt.ylabel('Время ретаргетинга')
-plt.title('Время ретаргетинга')
-plt.legend()
-plt.grid(True)
-plt.show()
+# plt.xlabel('Номер точки')
+# plt.ylabel('Время ретаргетинга')
+# plt.title('Время ретаргетинга')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
 
     
