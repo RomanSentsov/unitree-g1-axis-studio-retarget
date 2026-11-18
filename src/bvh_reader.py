@@ -158,7 +158,7 @@ time_hand_r_arr = []
 
 PUBLISH_ROS2 = True
 
-arm_ik = G1_29_ArmIK(Unit_Test = False, Visualization = True)
+arm_ik = G1_29_ArmIK(Unit_Test = False, Visualization = False)
 
 ros_node = None
 pub_joints = None

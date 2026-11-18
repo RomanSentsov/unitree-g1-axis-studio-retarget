@@ -13,7 +13,6 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float64MultiArray
 from sshkeyboard import listen_keyboard, stop_listening
 
 # Импорты робота и записи
@@ -66,50 +65,6 @@ class G1_29_JointArmIndex(IntEnum):
 class G1_29_JointWaistIndex(IntEnum):
     kWaistYaw = 12; kWaistRoll = 13; kWaistPitch = 14
 
-class G1_29_StateReader:
-    def __init__(self, domain_id: int = 0, ifname: str = None):
-        if ifname:
-            ChannelFactoryInitialize(domain_id, ifname)
-        else:
-            ChannelFactoryInitialize(domain_id)
-        
-        self.latest_q = np.zeros(14)
-        self.latest_dq = np.zeros(14)
-        self.latest_waist_q = np.zeros(3)
-        self.latest_waist_dq = np.zeros(3)
-        self.lock = threading.Lock()
-        self.sub_ready = False
-
-        self.sub = ChannelSubscriber("rt/lowstate", hg_LowState)
-        self.sub.Init()
-
-        self.thread = threading.Thread(target=self._read_loop, daemon=True)
-        self.thread.start()
-
-        timeout = 5.0
-        start = time.time()
-        while not self.sub_ready and (time.time() - start) < timeout:
-            time.sleep(0.01)
-
-    def _read_loop(self):
-        while True:
-            msg = self.sub.Read()
-            if msg is not None:
-                with self.lock:
-                    for idx, joint_id in enumerate(G1_29_JointArmIndex):
-                        self.latest_q[idx] = msg.motor_state[joint_id].q
-                        self.latest_dq[idx] = msg.motor_state[joint_id].dq
-                    for idx, joint_id in enumerate(G1_29_JointWaistIndex):
-                        self.latest_waist_q[idx] = msg.motor_state[joint_id].q
-                        self.latest_waist_dq[idx] = msg.motor_state[joint_id].dq
-                self.sub_ready = True
-            time.sleep(0.002)
-
-    def get_current_dual_arm_q(self): return self.latest_q.copy()
-    def get_current_dual_arm_dq(self): return self.latest_dq.copy()
-    def get_current_waist_q(self): return self.latest_waist_q.copy()
-    def get_current_waist_dq(self): return self.latest_waist_dq.copy()
-
 
 class MainController:
     def __init__(self, args):
@@ -136,10 +91,8 @@ class MainController:
         self.recorder = None
         self.camera_clients = {}
         self.camera_config = None
-        self.arm_state_reader = None
         
         if self.args.record_dataset:
-            self.arm_state_reader = G1_29_StateReader(domain_id=1 if args.sim else 0, ifname=args.network_interface)
             self._init_recorder()
 
         # 5. Клавиатура
@@ -175,7 +128,7 @@ class MainController:
         def on_press(key):
             if key == 'e':
                 if not self.received_first_cmd:
-                    print("can't enable: no comands were yet receiced")
+                    print("[KeyboardLoop] can't enable: no commands yet received")
                 elif self.args.control_robot and self.g1:
                     self.robot_enabled = not self.robot_enabled
                     if self.robot_enabled:
@@ -250,10 +203,12 @@ class MainController:
 
     def _build_data_dict(self):
         try:
-            current_lr_arm_q = self.arm_state_reader.get_current_dual_arm_q()
-            current_lr_arm_dq = self.arm_state_reader.get_current_dual_arm_dq()
-            current_waist_q = self.arm_state_reader.get_current_waist_q()
-            current_waist_dq = self.arm_state_reader.get_current_waist_dq()
+            current_lr_arm_q = self.g1.get_current_dual_arm_q()
+            current_lr_arm_dq = self.g1.get_current_dual_arm_dq()
+            current_waist_q = self.g1.get_current_waist_q()
+            current_waist_dq = self.g1.get_current_waist_dq()
+            current_hand_r_q = self.g1.get_hand_r()
+            current_hand_l_q = self.g1.get_hand_l()
             
             half = len(current_lr_arm_q) // 2
             states = {
@@ -271,8 +226,8 @@ class MainController:
             arm_waist_dict, q_l_hand, q_r_hand = retarget_res
 
         # TODO: states in ee should be observations, but currently are just copied actions
-        states["left_ee"] = {"qpos": q_l_hand, "qvel": [], "torque": []}
-        states["right_ee"] = {"qpos": q_r_hand, "qvel": [], "torque": []}
+        states["left_ee"] = {"qpos": current_hand_l_q, "qvel": [], "torque": []}
+        states["right_ee"] = {"qpos": current_hand_r_q, "qvel": [], "torque": []}
 
         actions = {
             "left_arm": {"qpos": [arm_waist_dict.get(n, 0.0) for n in LEFT_ARM_NAMES], "qvel": [], "torque": []},
@@ -373,7 +328,7 @@ class MainController:
 def main():
     parser = argparse.ArgumentParser(description="Монолитный скрипт телеуправления Unitree G1 с записью датасета")
     parser.add_argument('--control-robot', action='store_true', help='Включить физическое управление роботом Unitree G1')
-    parser.add_argument('--network-interface', type=str, default='enxc84d4427fee8', help='Сетевой интерфейс для DDS (например, eth0, enxc84d4427fee8)')
+    parser.add_argument('--network-interface', type=str, help='Сетевой интерфейс для DDS (например, eth0, enxc84d4427fee8)')
     parser.add_argument('--record-dataset', action='store_true', help='Включить запись датасета (инициализация камер и EpisodeWriter)')
     parser.add_argument('--task-dir', type=str, default='./data/', help='Директория для сохранения данных датасета')
     parser.add_argument('--task-name', type=str, default='demo_task', help='Имя папки/задачи для сохранения эпизода')

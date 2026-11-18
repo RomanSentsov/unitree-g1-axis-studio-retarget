@@ -1,6 +1,8 @@
 import time
 import sys, os
 import numpy as np
+import threading
+from enum import IntEnum
 
 parent2_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(parent2_dir)
@@ -94,6 +96,15 @@ WAIST_JOINTS = [
     G1JointIndex.WaistPitch,
 ]
 
+class G1_29_JointArmIndex(IntEnum):
+    kLeftShoulderPitch = 15; kLeftShoulderRoll = 16; kLeftShoulderYaw = 17; kLeftElbow = 18
+    kLeftWristRoll = 19; kLeftWristPitch = 20; kLeftWristyaw = 21
+    kRightShoulderPitch = 22; kRightShoulderRoll = 23; kRightShoulderYaw = 24; kRightElbow = 25
+    kRightWristRoll = 26; kRightWristPitch = 27; kRightWristYaw = 28
+
+class G1_29_JointWaistIndex(IntEnum):
+    kWaistYaw = 12; kWaistRoll = 13; kWaistPitch = 14
+
 
 # ---------------- Inspire Hand Constants & DDS Wrapper ----------------
 MODBUS_TCP_AVAILABLE = False
@@ -148,17 +159,23 @@ class SingleHandDDSWrapper:
 
 class UnitreeG1:
 
-    # TODO: add --sim argument that makes for /lowcmd topic when domain set to 1 (but not to 0!!!)
     def __init__(self, domain_id=0, ifname="enxc84d4427fee8", control_dt=0.02):
         if ifname is not None:
             ChannelFactoryInitialize(domain_id, ifname)
         else:
             ChannelFactoryInitialize(domain_id)
-
+        # domain_id = 0 is real robot, 1 for simulated one
         self.audioClient = AudioClient()
         self.audioClient.Init()
         self.audioClient.SetTimeout(4.0)
         self.audioClient.SetVolume(70)
+
+        # data receive
+        self.latest_arms_q = np.zeros(14)
+        self.latest_arms_dq = np.zeros(14)
+        self.latest_waist_q = np.zeros(3)
+        self.latest_waist_dq = np.zeros(3)
+        self.lock = threading.Lock()
 
         self.ep_started_audio, sample_rate, num_channels, is_ok = read_wav(WAV_EP_STARTED)
         if not is_ok or sample_rate != 16000 or num_channels != 1:
@@ -176,7 +193,10 @@ class UnitreeG1:
         self.kd = 1.5
         self.control_dt = control_dt
 
-        self.publisher = ChannelPublisher("rt/arm_sdk", LowCmd_)
+        self.arm_topic_name = "rt/arm_sdk"
+        if domain_id == 1:
+            self.arm_topic_name = "rt/lowcmd"
+        self.publisher = ChannelPublisher(self.arm_topic_name, LowCmd_)
         self.publisher.Init()
 
         self.subscriber = ChannelSubscriber("rt/lowstate", LowState_)
@@ -232,6 +252,8 @@ class UnitreeG1:
         while not self.first_update:
             time.sleep(0.1)
 
+        print("[g1]: first lowstate message recieved")
+
         # Стартовые цели = текущее положение
         self.target_pos_l = [self.low_state.motor_state[j].q for j in LEFT_ARM_JOINTS]
         self.target_pos_r = [self.low_state.motor_state[j].q for j in RIGHT_ARM_JOINTS]
@@ -247,8 +269,17 @@ class UnitreeG1:
 
     def _low_state_handler(self, msg: LowState_):
         self.low_state = msg
-        if not self.first_update:
-            self.first_update = True
+        if msg is not None:
+            if not self.first_update:
+                self.first_update = True
+            with self.lock:
+                for idx, joint_id in enumerate(G1_29_JointArmIndex):
+                    self.latest_arms_q[idx] = msg.motor_state[joint_id].q
+                    self.latest_arms_dq[idx] = msg.motor_state[joint_id].dq
+                for idx, joint_id in enumerate(G1_29_JointWaistIndex):
+                    self.latest_waist_q[idx] = msg.motor_state[joint_id].q
+                    self.latest_waist_dq[idx] = msg.motor_state[joint_id].dq
+            self.sub_ready = True
 
     def _hand_state_handler(self, msg: MotorStates_):
         if len(msg.states) >= 12:
@@ -309,6 +340,11 @@ class UnitreeG1:
         if len(q) != 3:
             raise ValueError("set_waist: нужно 3 значения")
         self.target_pos_waist = list(q)
+
+    def get_current_dual_arm_q(self): return self.latest_arms_q.copy()
+    def get_current_dual_arm_dq(self): return self.latest_arms_dq.copy()
+    def get_current_waist_q(self): return self.latest_waist_q.copy()
+    def get_current_waist_dq(self): return self.latest_waist_dq.copy()
 
     def enable_arm_sdk(self, duration=2.0):
         self.enable_target = 1.0
