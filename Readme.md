@@ -141,38 +141,45 @@ Only starts retargeting and visualization. Will not send any commands to the rob
 python src/main.py --control-robot --network-interface <yourNetInterface>
 ```
 
-<yourNetInterface> is the interface through which you are connected as listed in `ip a`.
+```<yourNetInterface>``` is the interface through which you are connected as listed in `ip a`.
 
 This command will start retarget and will send commands to the robot. When launching, robot won't move its arms until 'e' is pressed. After that, it will wait 5 sec and slowly enable arms (move them into your current state like in visualization). To return arms back to their idle pose, press 'e' again, which will slowly release the arms.
 
 To close the program, press 'q'
 Please don't interrupt the program when transition is happening or when it is shutting down.
 
-Robot will slightly bend back to keep the balance as DFTP hands are too heavy for it.
+Robot will slightly bend backwards to keep the balance as DFTP hands are too heavy for it. Make sure the rope allows for such body motions; otherwise, robot may start walking to maintain the balance.
 
 ### Record dataset
 ```
-python src/main.py --control-robot --network-interface <yourNetInterface> --record-dataset --task-dir <WhereToRecord> --task-name <Name> --task-goal <GoalShortlyDescribed> --task-desc <taskDescription> --task-steps <1.DoThat 2. DO this etc>
+python src/main.py --control-robot --network-interface <yourNetInterface> --record-dataset --task-dir <WhereToRecord> --task-name <Name> --task-goal <GoalShortlyDescribed> --task-desc <taskDescription> --task-steps <1.DoThat 2.DoThis etc>
 ```
 
 This will allow for dataset recording (press 's' for start/stop demonstration recording). Requires installed, configured and running teleimager-server on the robot.
 
-Will create folder ```task_name/``` in --task-dir (```./data/``` by default)
+Will create folder ```task_name/``` in ```--task-dir``` (```./data/``` by default)
 
 Records cameras, states and actions of arms, hands and waist in unitree format. Please refer to unitree_lerobot to edit, convert to Lerobot and train policies:
 
 https://github.com/unitreerobotics/unitree_lerobot
 
+### Control robot in simulation
+
+```
+python src/main.py --control-robot --sim
+```
+
+Reqires running isaaclab simulation of Unitree G1 with inspire hand. Refer to https://github.com/unitreerobotics/unitree_sim_isaaclab
 
 ### Other args:
 
-- --frequency: control frequency of the robot (and retarget). 50 Hz is default and recommended for smooth teleop.
+- ```--frequency```: control frequency of the robot (and retarget). 50 Hz is default and recommended for smooth teleop.
 
-- --record-frequency: recording frequency of the dataset. Default is 50 Hz.
+- ```--record-frequency```: recording frequency of the dataset. Default is 50 Hz.
 
-- --img-server-ip: teleimager-server ip. Robot's 192.168.123.164 is default.
+- ```--img-server-ip```: teleimager-server ip. Robot's 192.168.123.164 is default.
 
-- --sim: switch interface to control simulated robot in isaac_sim. To be implemented soon.
+- ```--sim```: switch interface to control simulated robot in isaac_sim. To be implemented soon.
 
 
 ## Errors
@@ -186,6 +193,4 @@ conda install numpy=1.26.4 pinocchio=3.1.0 -c conda-forge
 ```
 
 ## TODO:
-- Implement --sim to control simulated robot
-- Switch to unitree hand control method
-- Fix hand dataset recording (currently ee states are just copies of actions)
+- Add instructions for running on WSL and windows
