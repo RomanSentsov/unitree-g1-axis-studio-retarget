@@ -115,11 +115,17 @@ Set up the correct parameters in Axis Studio settings to broadcast BVH (BVH - Ed
 You need to install teleimager-server on robot to stream cameras from it. Please refer to official guide: 
 https://github.com/unitreerobotics/teleimager
 
-Make sure to install it with [all] flag to support all types of cameras
+Make sure to install it with [all] flag to support all types of cameras. Then configure cameras you have on robot in ```/home/linuxuser/.config/teleimager/teleimager_server.yaml```
 
 # How to run
 
-- Always make sure rviz visualization is running. It will help notice any possible errors before sending any commands on actual robot
+- Connect Inspire hands (only dftp model is supported) to the robot
+
+- Launch ```teleimager-server``` and ```dftp_inspire_service.py``` on robot.
+
+- Enter Running mode or Regular mode on remote controller.
+
+- Always make sure rviz visualization is running. It will help notice any possible errors before sending any commands on actual robot.
 
 - Main program is src/main.py, which you can launch with different arguments.
 
