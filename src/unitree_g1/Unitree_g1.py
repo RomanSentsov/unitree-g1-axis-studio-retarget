@@ -160,6 +160,7 @@ class SingleHandDDSWrapper:
 class UnitreeG1:
 
     def __init__(self, domain_id=0, ifname="enxc84d4427fee8", control_dt=0.02):
+        self.domain_id = domain_id
         if ifname is not None:
             ChannelFactoryInitialize(domain_id, ifname)
         else:
@@ -208,6 +209,9 @@ class UnitreeG1:
 
         self.hand_msg = MotorCmds_()
         self.hand_msg.cmds = [unitree_go_msg_dds__MotorCmd_() for _ in range(12)]
+        if self.domain_id == 1:
+            for cmd in self.hand_msg.cmds:
+                cmd.q = 1.0
 
         self.hand_state_sub = ChannelSubscriber(kTopicInspireState, MotorStates_)
         self.hand_state_sub.Init(self._hand_state_handler, 10)
@@ -283,8 +287,14 @@ class UnitreeG1:
 
     def _hand_state_handler(self, msg: MotorStates_):
         if len(msg.states) >= 12:
-            self.latest_hand_state_r = [float(msg.states[j].q) for j in Inspire_Right_Hand_JointIndex]
-            self.latest_hand_state_l = [float(msg.states[j].q) for j in Inspire_Left_Hand_JointIndex]
+            raw_r = [float(msg.states[j].q) for j in Inspire_Right_Hand_JointIndex]
+            raw_l = [float(msg.states[j].q) for j in Inspire_Left_Hand_JointIndex]
+            if self.domain_id == 1:
+                self.latest_hand_state_r = ((1.0 - np.clip(np.array(raw_r, dtype=np.float64), 0.0, 1.0)) * INSPIRE_JOINT_LIMITS_MAX).tolist()
+                self.latest_hand_state_l = ((1.0 - np.clip(np.array(raw_l, dtype=np.float64), 0.0, 1.0)) * INSPIRE_JOINT_LIMITS_MAX).tolist()
+            else:
+                self.latest_hand_state_r = raw_r
+                self.latest_hand_state_l = raw_l
             self.has_hand_state = True
 
     def _low_cmd_write(self):
@@ -399,8 +409,9 @@ class UnitreeG1:
         self.target_hand_r = q.tolist()
 
         # 1. DDS (simulation / xr_teleoperate standard)
+        q_dds = (1.0 - np.clip(q / INSPIRE_JOINT_LIMITS_MAX, 0.0, 1.0)) if self.domain_id == 1 else q
         for idx, joint_id in enumerate(Inspire_Right_Hand_JointIndex):
-            self.hand_msg.cmds[joint_id].q = float(q[idx])
+            self.hand_msg.cmds[joint_id].q = float(q_dds[idx])
         self.hand_cmd_pub.Write(self.hand_msg)
 
         # 2. Modbus TCP (physical RH56DFTP hardware on real robot)
@@ -426,8 +437,9 @@ class UnitreeG1:
         self.target_hand_l = q.tolist()
 
         # 1. DDS (simulation / xr_teleoperate standard)
+        q_dds = (1.0 - np.clip(q / INSPIRE_JOINT_LIMITS_MAX, 0.0, 1.0)) if self.domain_id == 1 else q
         for idx, joint_id in enumerate(Inspire_Left_Hand_JointIndex):
-            self.hand_msg.cmds[joint_id].q = float(q[idx])
+            self.hand_msg.cmds[joint_id].q = float(q_dds[idx])
         self.hand_cmd_pub.Write(self.hand_msg)
 
         # 2. Modbus TCP (physical RH56DFTP hardware on real robot)
